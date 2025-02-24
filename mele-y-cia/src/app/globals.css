@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+body {
+    background-color: #ffffff;
+    padding: 0px !important;
+    margin: 0px;
+    font-family: 'Poppins', sans-serif;
+  }
+
+.titulo-prueba{
+  color: black;
+  
+  font-size: 102px;
+  font-weight: bold;
+  font-style: italic;
+  
+
+}
+ 
+.card {
+  width: 180px;
+  height: 180px;
+  perspective: 1000px;
+  margin: 30px 10px;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.999s;
+  margin: 10px;
+}
+
+.card:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border: 3px solid rgba(0, 0, 0, 0.171);
+}
+
+.card-front {
+  background-color: #ffffff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  border-radius: 100px;
+  justify-content: center;
+  font-size: 24px;
+  height: 100%;
+  transform: rotateY(0deg);
+}
+
+.card-back {
+  background-color: #000000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 100px;
+  justify-content: center;
+  font-size: 24px;
+  transform: rotateY(180deg);
+}
+
+#category-toggle-list {
+	padding:0;
+	margin:0;
+	max-width:200px
+}
+
+#category-toggle-list li {
+	list-style:none;
+	color:#fff;
+	font-family:sans-serif;
+	text-transform:uppercase;
+	padding:15px 0;
+	position:relative;
+	margin-bottom:10px;
+	cursor:pointer;
+	font-weight:700;
+	letter-spacing:2px;
+	font-size:13px;
+	line-height:1.3em;
+	text-align:right;
+	transition:all ease 0.2s;
+}
+
+
+#category-toggle-list a {
+	text-decoration:none;
+	color:#fff;
+}
+
+#category-toggle-list li a:after {
+	content: " ";
+	background: #F90130;
+	width: 0%;
+	height: 2px;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	transition:all ease 0.4s;
+}
+
+#category-toggle-list li:hover a:after {
+	width:100%;
+	width:100%;
+}
+
+
+#category-toggle-list li.active a:after {
+	content: " ";
+	background: #fff;
+	width: 100%;
+	height: 2px;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+}
+/* From Uiverse.io by cssbuttons-io */ 
+button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  outline: none;
+  border: 0;
+  vertical-align: middle;
+  text-decoration: none;
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+ }
+ 
+ button.learn-more {
+  width: 11rem;
+  height: auto;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.7px;
+ }
+ 
+ button.learn-more .circle {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: relative;
+  display: block;
+  margin: 0;
+  width:2.5rem;
+  height:2.5rem;
+  background: black;
+  border-radius: 1.625rem;
+ }
+ 
+ button.learn-more .circle .icon {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  background: #fff;
+ }
+ 
+ button.learn-more .circle .icon.arrow {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  left: 0.625rem;
+  width: 0.85rem;
+  height: 0.125rem;
+  background: none;
+ }
+
+ button.learn-more .circle .icon.arrow::before {
+  position: absolute;
+  content: "";
+  top: -0.29rem;
+  right: 0.0625rem;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-top: 0.125rem solid #fff;
+  border-right: 0.125rem solid #fff;
+  transform: rotate(45deg);
+ }
+ 
+ button.learn-more .button-text {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem 0;
+  margin: 0 0 0 1.85rem;
+  color: black;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  text-transform: uppercase;
+  margin-top: -4px;
+ }
+ 
+ button:hover .circle {
+  width: 100%;
+ }
+ 
+ button:hover .circle .icon.arrow {
+  background: #fff;
+  transform: translate(1rem, 0);
+ }
+ 
+ button:hover .button-text {
+  color: #fff;
+ }
+
+:root {
+  --dark-color: #ffffff;
+  --mid-dark: #080F0F;
+  --light-color: #ece0c8;
+  --mid-light: #ffffff;
+  --shadow: #0005;
+  
+}
+
+h1 {
+  margin: 0;
+  
+  font-weight: 1000;
+  font-size: 64px;
+  color: white;
+}
+h2 {
+  margin: 0;
+  
+  font-size: 16px;
+  color: var(--mid-light);
+}
+
+
+p {
+
+  font-weight: 700;
+  
+  color: var(--mid-light);
+}
+
+
+a {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  
+  color: var(--mid-light);
+  font-weight: 400;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.main-container {
+  padding: 0;
+  margin: auto;
+  margin-left: 20vw;
+  display: grid;
+  height: 460px;
+  gap: 64px;
+  place-items: center;
+  box-sizing: border-box;
+}
+
+.imagen-hero{
+  display: flex;
+  margin: auto;
+}
+.text-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: -60px;
+  width: 85%;
+  margin: auto;
+}
+
+.text-container p{
+  color: black;
+  width: 90%;
+  font-size: 3.5rem;
+  font-family: "Bebas Neue", sans-serif;
+  font-style: italic;
+  letter-spacing: 0.7px;
+  margin-bottom: 20px;
+}
+.text-container span{
+  color: rgba(0, 0, 0, 0.658);
+  width: 90%;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+
+}
+
+
+
+@keyframes spawn{
+  0%{
+    box-shadow: 0 0 0 var(--shadow);
+    opacity:0%;
+  }
+  100%{
+    box-shadow: 0 0 32px var(--shadow);
+    opacity:100%;
+  }
+}
+  @media (max-width: 1500px) {
+    .text-container p{
+      font-size: 1.8rem;
+      width: 90%;
+      
+    }
+  }
+  @media (max-width: 1360px) {
+    .text-container p{
+      font-size: 1.6rem;
+    
+      
+    }
+  }
+  @media (max-width: 1150px) {
+    .text-container p{
+      font-size: 1.4rem;
+     
+      
+    }
+    
+    .learn-more img {
+      height: 25px !important;
+      width: 25px !important;
+     }
+  }
