@@ -1,5 +1,5 @@
 import AboutUs from "./components/AboutUs";
-import Contact from "./components/Contact";
+
 import Features from "./components/Features";
 import FeaturesSection from "./components/Features-section";
 import Footer from "./components/Footer";

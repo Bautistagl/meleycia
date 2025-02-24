@@ -1,45 +1,32 @@
 "use client";
-import React, { useRef, useState } from "react";
-import { Battery, Zap, Package } from "lucide-react";
+import React from "react";
 import "./features-section.css";
 import Image from "next/image";
 
 export default function FeaturesSection() {
-  const [isHovered, setIsHovered] = useState(false);
-  const timerRef = useRef<number | null>(null); // Tipo explícito
-
-  const handleMouseEnter = () => {
-    timerRef.current = window.setTimeout(() => {
-      setIsHovered(true);
-    },200); // Retraso de medio segundo
-  };
-
-  const handleMouseLeave = () => {
-    if (timerRef.current !== null) {
-      clearTimeout(timerRef.current); // Limpia el temporizador
-      timerRef.current = null; // Resetea el ref
-    }
-    setIsHovered(false);
-  };
   return (
-    <section  className="features-section">
+    <section className="features-section">
       <div>
         <div className="background-pattern"></div>
         <div className="gradient-overlay"></div>
       </div>
       <div className="text-container">
-        <p>
-          Somos líderes en la distribución de productos de alta calidad.
-          
-        </p>
-        <span>Trabajamos con las mejores marcas para ofrecer soluciones
-        excepcionales.</span>
+        <p>Somos líderes en la distribución de productos de alta calidad.</p>
+        <span>
+          Trabajamos con las mejores marcas para ofrecer soluciones
+          excepcionales.
+        </span>
         <div className="cta-container2">
-        <button className="cta-button">CONSULTAR PRECIOS</button>
-      </div>
+          <button className="cta-button">CONSULTAR PRECIOS</button>
+        </div>
       </div>
       <div className="imagen-hero">
-        <Image alt="" src='/energizer-personaje2.png' height={270} width={600}/>
+        <Image
+          alt=""
+          src="/energizer-personaje2.png"
+          height={270}
+          width={600}
+        />
       </div>
     </section>
   );
