@@ -1,6 +1,4 @@
 "use client";
-
-import useAuth from "@/hooks/useAuth";
 import AboutUs from "./components/landing/AboutUs";
 import BannerCarousel from "./components/landing/banner-carousel";
 
@@ -43,7 +41,6 @@ export default function Home() {
       ctaLink: "/herramientas",
     },
   ];
-  const { user } = useAuth();
 
   return (
     <div className="">

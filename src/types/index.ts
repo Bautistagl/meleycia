@@ -4,11 +4,11 @@ export interface Producto {
   nombre: string;
   precio: number;
   stock: boolean;
-  description:string;
-  categoria:string;
-  marca:string;
-  precio_oferta:number;
-  imageUrl: string ;
+  description: string;
+  categoria: string;
+  marca: string;
+  precio_oferta: number | null; // <-- Missing in your map
+  imageUrl: string;
 }
 
 export interface CarritoItem {

@@ -30,8 +30,12 @@ const useAuth = (): UseAuthHook => {
         setSession(initialSession);
         
         setUser(initialSession?.user || null);
-      } catch (error: any) { 
-        console.error('Unexpected error fetching initial session:', error.message || error);
+      } catch (error) { 
+         if (error instanceof Error) {
+    console.error('Unexpected error fetching initial session:', error.message);
+  } else {
+    console.error('Unexpected error fetching initial session:', error);
+  }
       } finally {
         setLoading(false);
       }

@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState, type FormEvent } from "react"
-import styles from "./login-form.module.css"
-import { supabase } from "@/lib/supabase"
-import Swal from "sweetalert2"
+import { useState, type FormEvent } from "react";
+import styles from "./login-form.module.css";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation"
 
 interface LoginFormData {

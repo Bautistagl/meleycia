@@ -83,7 +83,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     if (!imageFile) return imageUrl; // Si no hay nuevo archivo, devuelve la URL existente
 
     const fileName = `${Date.now()}-${imageFile.name}`;
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("mele-imagenes") // Reemplaza 'product-images' con el nombre de tu bucket
       .upload(fileName, imageFile, {
         cacheControl: "3600",

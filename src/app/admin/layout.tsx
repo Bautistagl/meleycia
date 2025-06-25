@@ -1,7 +1,7 @@
 import type React from "react"
 
 import styles from "./admin-layout.module.css"
-import { AdminHeader } from "../components/admin/admin-header"
+
 import { AdminSidebar } from "../components/admin/admin-sidebar"
 import Navbar from "../components/landing/Navbar"
 

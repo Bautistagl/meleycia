@@ -66,8 +66,12 @@ const ActualizarProductos: React.FC = () => {
           } else {
             setMessage(`Error al actualizar productos: ${data.error || 'Error desconocido'}`);
           }
-        } catch (error: any) {
-          setMessage(`Error en la solicitud: ${error.message || 'Error de red'}`);
+        } catch (error) {
+            if (error instanceof Error) {
+              setMessage(
+                `Error en la solicitud: ${error.message || "Error de red"}`
+              );
+            } 
         } finally {
           setLoading(false);
         }

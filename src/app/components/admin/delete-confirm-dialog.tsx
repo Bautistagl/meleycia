@@ -5,9 +5,9 @@ import {supabase} from "@/lib/supabase"
 import styles from "./delete-confirm-dialog.module.css"
 
 interface DeleteConfirmDialogProps {
-  id: string
-  name: string
-  children: React.ReactNode
+  id: number;
+  name: string;
+  children: React.ReactNode;
 }
 
 

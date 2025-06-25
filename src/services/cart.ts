@@ -1,6 +1,6 @@
 // services/cart.ts
 import { supabase } from "../lib/supabase";
-import { CarritoItem, Producto, Pedido } from "../types";
+import { CarritoItem, Pedido } from "../types";
 
 export const obtenerCarritoActivoCliente = async (
   clienteId: string
