@@ -1,0 +1,13 @@
+.adminLayout {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.contentWrapper {
+  display: flex;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 24px;
+}

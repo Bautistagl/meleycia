@@ -306,6 +306,49 @@ a {
 
 
 
+
+.swal-horizontal-layout {
+  /* Si el ícono y el título son los hijos directos del popup, usa esto */
+  display: flex !important;
+  align-items: center !important; /* Alinea verticalmente el ícono y el texto */
+  justify-content: center !important; /* Centra el contenido horizontalmente si es necesario */
+  gap: 10px !important; /* Espacio entre el ícono y el texto */
+  padding: 1em !important; /* Ajusta el padding general del popup */
+}
+
+
+.swal-horizontal-layout .swal2-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 0 !important; /* Quita el padding por defecto del header si interfiere */
+}
+
+
+/* Estilos para el icono (manteniendo el tamaño, pero sin width/height fijos) */
+.swal-small-icon {
+  font-size: 8px !important; /* Solo controla el tamaño del icono con font-size */
+  margin: 0 !important; /* Quita márgenes por defecto para que no estorben */
+}
+
+/* Estilos para el título */
+.swal-no-margin-title {
+  margin: 0 !important; /* Quita el margen por defecto del título */
+  font-size: 16px !important; /* Ajusta el tamaño del texto del título si es necesario */
+  line-height: 1.2 !important; /* Asegura un interlineado adecuado para el texto */
+}
+
+/* Si tenés un "htmlContainer" (texto adicional), también querrías ajustar sus márgenes */
+.swal2-html-container {
+    margin: 0 !important;
+}
+
+/* Opcional: ajustar el tamaño general del texto si no usaste swal-small-font */
+.swal2-popup {
+    font-size: 0.9em !important; /* Para el resto del texto del popup, si lo hay */
+}
+
 @keyframes spawn{
   0%{
     box-shadow: 0 0 0 var(--shadow);

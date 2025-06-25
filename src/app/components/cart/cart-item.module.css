@@ -1,0 +1,146 @@
+.cartItem {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr 0.5fr;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #e0e0e0;
+  align-items: center;
+}
+
+.product {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+.productImage {
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.image {
+  object-fit: contain;
+  border: 1px solid #eee;
+}
+
+.productInfo {
+  flex-grow: 1;
+}
+
+.productName {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.productCategory {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.price,
+.total {
+  font-weight: 600;
+  padding: 0 0.5rem;
+}
+
+.quantity {
+  padding: 0 0.5rem;
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  max-width: 120px;
+}
+
+.quantityBtn {
+  width: 32px;
+  height: 32px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.quantityBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quantityInput {
+  width: 40px;
+  height: 32px;
+  text-align: center;
+  border: 1px solid #ddd;
+  margin: 0 4px;
+  -moz-appearance: textfield;
+}
+
+.quantityInput::-webkit-outer-spin-button,
+.quantityInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.action {
+  display: flex;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: #e30613;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+
+.removeBtn:hover {
+  color: #c00;
+}
+
+.mobileLabel {
+  display: none;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .cartItem {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .product {
+    padding: 0;
+  }
+
+  .price,
+  .quantity,
+  .total,
+  .action {
+    padding: 0;
+  }
+
+  .price,
+  .quantity,
+  .total {
+    display: flex;
+    align-items: center;
+  }
+
+  .mobileLabel {
+    display: inline-block;
+    min-width: 80px;
+  }
+
+  .action {
+    justify-content: flex-start;
+  }
+}

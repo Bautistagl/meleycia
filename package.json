@@ -9,14 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.50.1",
+    "lucide-react": "^0.511.0",
     "next": "15.0.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "papaparse": "^5.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sweetalert2": "^11.21.2"
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/papaparse": "^5.3.16",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "eslint": "^8",
     "eslint-config-next": "15.0.4",
     "typescript": "^5"
