@@ -28,12 +28,20 @@
   flex-direction: column;
   gap: 8px;
 }
-
+.formGroup {
+  display: flex;
+}
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+.formGroup2 input[type="checkbox"] {
+  transform: scale(1.5); /* Aumenta el tamaño en un 50% */
+  /* También puedes ajustar el margin para que no se pegue al texto si el tamaño es muy grande */
+  margin-left: 8px;
+}
+
 
 .label {
   font-size: 0.875rem;
@@ -48,7 +56,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   font-size: 0.875rem;
-  width: 100%;
+  width: 95%;
 }
 
 .input:focus,

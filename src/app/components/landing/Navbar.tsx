@@ -61,31 +61,37 @@ const Navbar = () => {
   return (
     <nav className={styles.navbar}>
       <div className={styles.logoContainer}>
-       
         <Link href="/">
           <Image src="/logoMele.png" alt="" height={100} width={240} />
         </Link>
       </div>
       <div className={`${styles.navLinks} ${isOpen ? styles.open : ""}`}>
-        {admin ? <Link href="/admin" className={styles.navLink}>
-          Backoffice
-        </Link> : ''}
+        {admin ? (
+          <Link href="/admin" className={styles.navLink}>
+            Backoffice
+          </Link>
+        ) : (
+          ""
+        )}
 
-        <Link target="_blank" href="https://wa.me/+5491138824301" className={styles.navLink}>
+        <Link
+          target="_blank"
+          href="https://wa.me/+5491138824301"
+          className={styles.navLink}
+        >
           Contacto
         </Link>
         <Link href="/productos" className={styles.navLink}>
           Productos
         </Link>
-          <Link href="/pedido" className={styles.navLink}>
+        <Link href="/pedido" className={styles.navLink}>
           Pedido
         </Link>
       </div>{" "}
       {user ? (
-        <div style={{display:'flex'}}>
+        <div style={{ display: "flex" }}>
           {" "}
-       
-            <Link href='/pedido'>
+          <Link href="/pedido">
             <Image
               src="/carrito.png"
               alt="Shopping Cart"
@@ -93,9 +99,7 @@ const Navbar = () => {
               height={30}
               className={styles.cartIcon}
             />{" "}
-            </Link>
-            {" "}
-          
+          </Link>{" "}
           <button className={styles.ctabutton3} onClick={handleLogout}>
             Cerrar Sesión
           </button>{" "}
@@ -105,7 +109,10 @@ const Navbar = () => {
           <button className="cta-button3">Iniciar Sesión</button>{" "}
         </Link>
       )}
-      <div className={styles.mobileMenuToggle} onClick={toggleMenu}>
+      <div
+        className={`${styles.mobileMenuToggle} ${isOpen ? styles.open : ""}`}
+        onClick={toggleMenu}
+      >
         <span></span>
         <span></span>
         <span></span>

@@ -1,3 +1,4 @@
+
 .card {
   position: relative;
   border: 1px solid #e0e0e0;
@@ -6,7 +7,11 @@
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  max-width: 300px;
+  max-width: 300px; 
+  width: 100%; 
+  box-sizing: border-box; 
+  display: flex; 
+  flex-direction: column; 
 }
 
 .card:hover {
@@ -20,7 +25,10 @@
   left: 12px;
   z-index: 2;
 }
-
+.price{
+  font-weight: bold;
+  font-size: 1.1rem;
+}
 .inStock {
   background: #4caf50;
   color: white;
@@ -64,7 +72,6 @@
   justify-content: center;
   align-items: center;
   height: 200px;
-  
   border-radius: 8px;
   overflow: hidden;
 }
@@ -79,6 +86,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 0; /* Removed padding from here as it's now on .card directly for consistency */
+  flex-grow: 1; /* Allow content to grow and push footer down */
 }
 
 .title {
@@ -126,40 +135,36 @@
 
 .footer {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 16px;
-  gap: 12px;
+  margin-top: 15px;
+  padding-top: 15px; /* Added padding to top to separate from content */
+  border-top: 1px solid #eee; /* Added border-top for separation */
 }
 
 .pricingContainer {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
-}
-
-.price {
-  font-size: 20px;
-  font-weight: 700;
-  color: #333;
+  flex: 1; /* Allows it to take available space */
+  text-align: right; /* Default align for desktop */
 }
 
 .originalPrice {
-  font-size: 14px;
-  color: #999;
   text-decoration: line-through;
-  font-weight: 400;
+  color: #999;
+  font-size: 0.9rem;
+
 }
 
 .offerPrice {
   display: flex;
-  flex-direction: column;
+  
   gap: 2px;
 }
 
 .offerPriceText {
-  font-size: 22px;
+  font-size:1.1rem;
   font-weight: 800;
   color: #F90130;
   text-shadow: 0 1px 2px rgba(229, 62, 62, 0.2);
@@ -170,9 +175,28 @@
   font-weight: 600;
   color: #F90130;
   background: rgba(229, 62, 62, 0.1);
+  
   padding: 2px 6px;
   border-radius: 4px;
-  align-self: flex-start;
+  align-self: center; /* Aligns to the end of the flex container (right) */
+}
+
+.actionsContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto; /* Pushes it to the bottom if content is shorter */
+}
+
+.quantityInput {
+  width: 70px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 1rem;
+  box-sizing: border-box; /* Ensures padding doesn't increase total width */
 }
 
 .addButton {
@@ -192,6 +216,7 @@
   background: #c53030;
   transform: translateY(-1px);
 }
+
 .noStock {
   background: #f9012e88;
   color: white;
@@ -200,20 +225,17 @@
   border-radius: 6px;
   font-weight: 600;
   font-size: 14px;
-  cursor: pointer;
+  cursor: not-allowed; /* Changed from pointer for better UX */
   pointer-events: none;
   transition: background-color 0.2s ease, transform 0.1s ease;
   white-space: nowrap;
 }
 
-.noStock:hover {
-  background: #c53030;
-  transform: translateY(-1px);
-}
-
 .addButton:active {
   transform: translateY(0);
 }
+
+/* Modal Styles */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -224,7 +246,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
+  z-index: 1000;
 }
 
 .modalContent {
@@ -234,7 +256,8 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   text-align: center;
   max-width: 400px;
-  width: 90%;
+  width: 90%; /* Make it responsive */
+  box-sizing: border-box;
 }
 
 .modalContent h2 {
@@ -254,6 +277,7 @@
   display: flex;
   justify-content: center;
   gap: 15px;
+  flex-wrap: wrap; /* Allow buttons to wrap on small screens */
 }
 
 .modalLoginButton,
@@ -264,10 +288,12 @@
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.3s ease;
+  flex-grow: 1; /* Allow buttons to grow */
+  max-width: 150px; /* Limit max width for buttons */
 }
 
 .modalLoginButton {
-  background-color: #F90130; /* Color primario */
+  background-color: #F90130;
   color: white;
 }
 
@@ -282,4 +308,253 @@
 
 .modalCancelButton:hover {
   background-color: #bbb;
+}
+
+
+/* --- Responsive Adjustments --- */
+
+/* Tablets and small laptops ( pantallas de hasta 1199px de ancho) */
+@media (max-width: 1199px) {
+  .card {
+    max-width: 280px; /* Slightly smaller card for better fit in rows */
+    padding: 14px;
+  }
+
+  .imageContainer {
+    height: 180px;
+    margin: 15px 0;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+
+  .offerPriceText {
+    font-size: 20px;
+  }
+
+  .originalPrice {
+    font-size: 0.95rem;
+  }
+
+  .discountPercentage {
+    font-size: 10.5px;
+  }
+
+  .quantityInput {
+    width: 65px;
+    padding: 9px;
+  }
+
+  .addButton {
+    padding: 9px 14px;
+    font-size: 13.5px;
+  }
+
+  .stock,
+  .offerBadge {
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* Mobile devices (pantallas de hasta 767px de ancho) */
+@media (max-width: 767px) {
+  .card {
+    max-width: 90%; /* Allow card to take more width on mobile */
+    margin: 15px auto; /* Center the card */
+    padding: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+  }
+
+  .card:hover {
+    transform: none; /* Disable hover transform on touch devices */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .stock{
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    transform: rotate(0deg); /* Remove rotation for simpler look */
+  }
+  .offerBadge {
+    top: 6px;
+    right: 6px; /* Keeping it on the right side for consistency with desktop */
+    left: 70%;
+    padding: 4px 6px;
+    font-size: 10px;
+    /* Remove left: 6px; if it was present, as it conflicts with right: 6px; */
+  }
+
+  .offerText {
+    font-size: 10px;
+  }
+
+  .imageContainer {
+    height: 160px;
+    margin: 10px 0;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .details {
+    gap: 4px;
+  }
+
+  .label,
+  .value {
+    font-size: 12px;
+  }
+
+  .description {
+    font-size: 13px;
+    -webkit-line-clamp: 3; /* Allow more lines for description */
+  }
+
+  .footer {
+    flex-direction: column; /* Stack price and actions vertically */
+    align-items: stretch; /* Stretch items to full width */
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .pricingContainer {
+    text-align: left; /* Align price to left when stacked */
+    margin-bottom: 10px; /* Add space between price and actions */
+    flex: none; /* Remove flex grow */
+  }
+
+  .offerPriceText {
+    font-size: 20px;
+  }
+
+  .originalPrice {
+    font-size: 0.9rem;
+  }
+
+  .discountPercentage {
+    align-self: flex-start; /* Align to left when stacked */
+  }
+
+  .actionsContainer {
+    width: 100%; /* Ensure it takes full width */
+    justify-content: space-between; /* Keep space between input and button */
+    gap: 8px; /* Reduce gap */
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none; /* Remove border if footer already has one */
+  }
+
+  .quantityInput {
+    width: 60px;
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  .addButton,
+  .noStock {
+    padding: 8px 12px;
+    font-size: 13px;
+    flex-grow: 1; /* Allow button to grow and fill space */
+  }
+
+  /* Modal adjustments for mobile */
+  .modalContent {
+    padding: 20px;
+    width: 95%; /* Wider on very small screens */
+  }
+
+  .modalContent h2 {
+    font-size: 1.3rem;
+  }
+
+  .modalContent p {
+    font-size: 0.9rem;
+  }
+
+  .modalActions {
+    flex-direction: column; /* Stack modal buttons */
+    gap: 10px;
+  }
+
+  .modalLoginButton,
+  .modalCancelButton {
+    width: 100%; /* Full width buttons */
+    max-width: none; /* Remove max width constraint */
+    font-size: 0.95rem;
+  }
+}
+
+/* Very small mobile devices (pantallas de hasta 480px de ancho) */
+@media (max-width: 480px) {
+ 
+
+  
+ .offerBadge {
+    top: 6px;
+    right: 6px; /* Keeping it on the right side for consistency with desktop */
+    left: 70%;
+    padding: 4px 6px;
+    font-size: 10px;
+    /* Remove left: 6px; if it was present, as it conflicts with right: 6px; */
+  }
+
+  .offerText {
+    font-size: 9px;
+  }
+
+  .imageContainer {
+    height: 140px;
+    margin: 8px 0;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .label,
+  .value {
+    font-size: 11px;
+  }
+
+  .description {
+    font-size: 12px;
+  }
+
+  .offerPriceText {
+    font-size: 18px;
+  }
+
+  .originalPrice {
+    font-size: 0.85rem;
+  }
+
+  .discountPercentage {
+    font-size: 9.5px;
+  }
+
+  .quantityInput {
+    width: 50px;
+    padding: 7px;
+    font-size: 0.85rem;
+  }
+
+  .addButton,
+  .noStock {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .modalContent {
+    padding: 15px;
+  }
+
+  .modalContent h2 {
+    font-size: 1.2rem;
+  }
 }

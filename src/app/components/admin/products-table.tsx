@@ -24,7 +24,7 @@ export function ProductsTable() {
         supabase
           .from("productos")
           .select(
-            "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl",
+            "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl, destacado",
             { count: "exact" }
           )
           .order("created_at", { ascending: false })
@@ -43,6 +43,7 @@ export function ProductsTable() {
           marca: p.marca,
           imageUrl: p.imageUrl,
           precio_oferta: p.precio_oferta,
+          destacado: p.destacado,
         }));
         setProducts(mapped);
         setTotalPages(Math.ceil((count ?? 0) / ITEMS_PER_PAGE));

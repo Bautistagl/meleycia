@@ -1,103 +1,206 @@
 .features-section {
- 
-   display: grid;
-   grid-template-columns: 1% 45% 45%;
-   margin: auto;
-   justify-content: center;
-   height: 50vh;
-  }
-  .about-section{
-    display: flex;
-  }
-  .contenedor-features{
-    display: flex;
-    flex-direction: column;
-    margin: auto;
- 
-    
-  }
-  .energizer{
-    display: flex;
-    position: absolute;
-    margin-top: 5%;
-    height: auto;
-  }
-  .energizer2{
-    position: absolute;
-    left: 75%;
-    
-  }
- 
+  display: grid;
+  grid-template-columns: 1% 45% 45%; 
+  margin: auto;
+  justify-content: center;
+  height: 50vh;
+  align-items: center; 
+  padding: 2rem 0;
+}
+
+.text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem; /* Add padding to text container */
+}
+
+.text-container p {
+  font-size: 2.5rem; 
+  font-weight: 800; 
+  color: black;
+  margin-bottom: 1rem;
   
-  .features-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    width: 90%;
-    margin: auto;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.text-container span {
+  font-size: 1.1rem; /* Adjust font size for description */
+  color: #333;
+  line-height: 1.5;
+}
+
+.cta-container2 {
+  margin-top: 2rem;
+}
+
+.cta-button {
+  background-color: #ff0033; /* Red color */
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+  background-color: #cc0022; /* Darker red on hover */
+}
+
+.imagen-hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.imagen-hero img {
+  width: 100%; /* Make image responsive */
+  height: auto;
+  max-width: 600px; /* Limit max width of image */
+}
+
+/* --- Media Queries --- */
+
+/* Medium screens (iPad, small notebooks - 768px to 1024px) */
+@media (max-width: 1024px) {
+  .features-section {
+    grid-template-columns: 1fr; /* Stack content on medium screens */
+    height: auto; /* Adjust height dynamically */
+    padding: 3rem 1rem; /* More vertical padding */
   }
-  
-  .feature {
-    display: flex;
-    flex-direction: column;
+
+  .text-container {
+    text-align: center; /* Center text */
+    padding: 1rem 0;
+     justify-content: center;
     align-items: center;
-    text-align: center;
-    width: auto;
+    align-self: center;
   }
-  .features-section img{
-    display: flex;
+
+  .text-container p {
+    font-size: 2rem; /* Smaller font size for heading */
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+  }
+
+  .text-container span {
+    font-size: 1rem;
+  }
+
+  .cta-container2 {
+    margin-top: 1.5rem;
+
     margin: auto;
-    margin-left: 6px;
-    margin-bottom: 0px;
   }
-  .feature-icon {
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
-    background-color: #000000c4 !important;
+
+  .imagen-hero {
+    margin-top: 2rem; /* Add space between text and image */
   }
-  .icon-red {
-    color: #FF0000 !important;
+}
+
+/* Small screens (mobile devices - up to 767px) */
+@media (max-width: 767px) {
+  .features-section {
+    padding: 2rem 1rem;
   }
-  /* .background-pattern {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0.2;
-    background-image: 
-      radial-gradient(circle at 25px 25px, black 2%, transparent 3%),
-      radial-gradient(circle at 75px 75px, black 2%, transparent 3%);
-    background-size: 100px 100px;
-   
-  } */
-  
-  .gradient-overlay {
-  
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
+
+  .text-container p {
+    font-size: 1.7rem; /* Even smaller font for mobile */
   }
-  
-  .feature-title {
-    color: black;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    font-size: 1.125rem;
+
+  .text-container span {
+    font-size: 0.9rem;
   }
-  
-  .feature-description {
-    color: #000000c4;
-    font-size: 0.875rem;
+
+  .cta-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
   }
-  
-  @media (min-width: 768px) {
-    .features-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
+
+  .imagen-hero img {
+    max-width: 300px; /* Adjust max width for mobile image */
   }
-  
-  
+}
+
+/* Other existing CSS (keep these as they are, or adjust if needed for general styling) */
+.about-section {
+  display: flex;
+}
+
+.contenedor-features {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.energizer {
+  display: flex;
+  position: absolute;
+  margin-top: 5%;
+  height: auto;
+}
+
+.energizer2 {
+  position: absolute;
+  left: 75%;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 90%;
+  margin: auto;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: auto;
+}
+
+.features-section img {
+  display: flex;
+  margin: auto;
+  margin-left: 6px;
+  margin-bottom: 0px;
+}
+
+.feature-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  background-color: #000000c4 !important;
+}
+
+.icon-red {
+  color: #FF0000 !important;
+}
+
+.gradient-overlay {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.9), transparent);
+}
+
+.feature-title {
+  color: black;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+}
+
+.feature-description {
+  color: #000000c4;
+  font-size: 0.875rem;
+}

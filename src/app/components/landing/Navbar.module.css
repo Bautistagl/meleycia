@@ -1,94 +1,223 @@
 .navbar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    padding: 1rem 2rem;
-    background-color: #000000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 999 !important;
-  }
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* Default for larger screens: Logo | Nav Links | Buttons */
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #000000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 999 !important;
+  position: relative; /* Needed for absolute positioning of mobile menu */
+  min-height: 80px; /* Ensure a minimum height for the navbar */
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logoContainer img {
+  height: 60px; /* Adjust logo height for better scaling */
+  width: auto; /* Maintain aspect ratio */
+}
+
+.cartIcon {
+  display: flex;
+  margin: auto 10px; /* Keep existing margin */
   
-  .logoContainer {
-    display: flex;
-    align-items: center;
-  }
-  .cartIcon{
-    display: flex;
-    margin: auto 10px;
-  }
-  .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .navLinks {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-  }
-  
-  .navLink {
-    text-decoration: none;
-    color: white;
-    font-weight: 500;
-    transition: color 0.3s ease;
-  }
-  
-  .navLink:hover {
-    color: #F90130;
-  }
-  
-  .mobileMenuToggle {
-    display: none;
-    flex-direction: column;
-    cursor: pointer;
-  }
-  
-  .mobileMenuToggle span {
-    display: block;
-    width: 25px;
-    height: 3px;
-    background-color: #333;
-    margin-bottom: 5px;
-    transition: all 0.3s ease;
-  }
-    .ctabutton3{
-        background-color: #F90130;
-    color: white;
-    border: none;
-    padding: 6px ;
-    width: 120px;
-    border-radius: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 0.8rem;
-  }
-  @media (max-width: 768px) {
-    .navbar {
-      grid-template-columns: auto 1fr;
-    }
-  
-    .navLinks {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background-color: #f8f9fa;
-      padding: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-  
-    .navLinks.open {
-      display: flex;
-    }
-  
-    .mobileMenuToggle {
-      display: flex;
-    }
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.navLinks {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem; /* Increase gap between links for better spacing */
+  transition: all 0.3s ease-in-out; /* Add transition for smooth opening/closing */
+}
+
+.navLink {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  white-space: nowrap; /* Prevent links from wrapping */
+}
+
+.navLink:hover {
+  color: #f90130;
+}
+
+.mobileMenuToggle {
+  display: none !important; /* Hidden by default on desktop */
+  flex-direction: column;
+  cursor: pointer;
+  z-index: 1000; /* Ensure toggle is above other content */
+}
+
+.mobileMenuToggle span {
+  display: block;
+  width: 28px; /* Slightly larger for better touch */
+  height: 3px;
+  background-color: white; /* Change to white for dark navbar */
+  margin-bottom: 6px; /* Slightly more space */
+  transition: all 0.3s ease;
+}
+
+/* Animation for menu icon when open */
+.mobileMenuToggle.open span:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+}
+
+.mobileMenuToggle.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobileMenuToggle.open span:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
+}
+
+.ctabutton3 {
+  background-color: #f90130;
+  color: white;
+  border: none;
+  padding: 8px 15px; /* Slightly more padding */
+  min-width: 120px; /* Ensure consistent width */
+  border-radius: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 0.85rem; /* Slightly larger font */
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.ctabutton3:hover {
+  background-color: #cc0022; /* Darker red on hover */
+}
+
+/* Wrapper for cart icon and button */
+.navbar > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between cart and button */
+}
+
+/* --- Media Queries --- */
+
+/* Medium screens (iPad, small notebooks - 769px to 1024px) */
+@media (max-width: 1024px) {
+  .navbar {
+    padding: 1rem 1.5rem; /* Slightly less padding */
+    grid-template-columns: auto 1fr auto; /* Still Logo | Nav Links | Buttons */
   }
 
- 
+  .logoContainer img {
+    height: 50px; /* Slightly smaller logo */
+  }
+
+  .navLinks {
+    gap: 1rem; /* Reduce gap between links */
+    font-size: 0.95rem; /* Slightly smaller font for links */
+  }
+
+  .ctabutton3 {
+    padding: 7px 12px; /* Adjust button padding */
+    font-size: 0.8rem; /* Adjust button font size */
+    min-width: 100px;
+  }
+}
+
+/* Small screens (mobile devices - up to 768px) */
+@media (max-width: 768px) {
+  .navbar {
+    grid-template-columns: auto 1fr auto; /* Logo | Empty space for toggle | Buttons/Toggle */
+    padding: 0.8rem 1rem;
+    position: relative; /* Important for absolute positioning of navLinks */
+  }
+
+  .logoContainer img {
+    height: 45px; /* Even smaller logo for mobile */
+  }
+
+  .navLinks {
+    display: none; /* Hide nav links by default */
+    flex-direction: column;
+    position: absolute;
+    top: 100%; /* Position below the navbar */
+    left: 0;
+    width: 100%; /* Full width */
+    background-color: #000000; /* Dark background for mobile menu */
+    padding: 1rem 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    align-items: center; /* Center links in mobile menu */
+    z-index: 998; /* Below the navbar itself */
+  }
+
+  .navLinks.open {
+    display: flex !important;
+  }
+
+  .navLink {
+    padding: 0.8rem 1rem;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Separator */
+  }
+
+  .navLink:last-child {
+    border-bottom: none;
+  }
+
+  .mobileMenuToggle {
+    display: flex !important; /* Show the hamburger icon */
+    order: 2; /* Position it between logo and buttons if needed, or adjust grid */
+    margin-left: auto; /* Push it to the right if there are no other buttons for anon users */
+  }
+
+  /* Adjust button container for logged in state on mobile */
+  .navbar > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Smaller gap */
+  }
+
+  .ctabutton3 {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    min-width: 90px;
+    order: 3; /* Position the button to the right of the toggle */
+  }
+
+  .cartIcon {
+    margin: auto 5px; /* Adjust margin */
+    width: 25px; /* Smaller cart icon */
+    height: 25px;
+    order: 1; /* Position cart icon before button */
+  }
+}
+
+/* Extra small screens (less than 480px, e.g., small phones) */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .logoContainer img {
+    height: 40px;
+  }
+
+  .mobileMenuToggle span {
+    width: 24px;
+    height: 2px;
+    margin-bottom: 4px;
+  }
+
+  .ctabutton3 {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    min-width: 80px;
+  }
+}

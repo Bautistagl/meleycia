@@ -53,27 +53,34 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
       <div className={styles.product}>
         <div className={styles.productImage}>
           <Image
-            src={ item.foto || "/placeholder.svg?height=80&width=80"}
-            alt={item.producto.nombre || "Producto"}
+            src={item.foto || "/placeholder.svg?height=80&width=80"}
+            alt={item.producto?.nombre || "Producto"}
             width={80}
             height={80}
             className={styles.image}
           />
         </div>
         <div className={styles.productInfo}>
-          <h3 className={styles.productName}>{item.producto?.nombre || `Producto #${item.producto_id}`}</h3>
+          <h3 className={styles.productName}>
+            {item.producto?.nombre || `Producto #${item.producto_id}`}
+          </h3>
           <p className={styles.productCategory}>{item.marca || "Sin Marca"}</p>
         </div>
       </div>
 
       <div className={styles.price}>
-        <span className={styles.mobileLabel}>Precio:</span>${item.producto?.precio}
+        <span className={styles.mobileLabel}>Precio:</span>$
+        {item.producto?.precio}
       </div>
 
       <div className={styles.quantity}>
         <span className={styles.mobileLabel}>Cantidad:</span>
         <div className={styles.quantityControls}>
-          <button className={styles.quantityBtn} onClick={decrementQuantity} disabled={quantity <= 1}>
+          <button
+            className={styles.quantityBtn}
+            onClick={decrementQuantity}
+            disabled={quantity <= 1}
+          >
             -
           </button>
           <input
@@ -90,14 +97,19 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
       </div>
 
       <div className={styles.total}>
-        <span className={styles.mobileLabel}>Total:</span>${totalPrice.toFixed(2)}
+        <span className={styles.mobileLabel}>Total:</span>$
+        {totalPrice.toFixed(2)}
       </div>
 
       <div className={styles.action}>
-        <button className={styles.removeBtn} onClick={handleRemove} aria-label="Eliminar producto">
+        <button
+          className={styles.removeBtn}
+          onClick={handleRemove}
+          aria-label="Eliminar producto"
+        >
           <Trash2 size={18} />
         </button>
       </div>
     </div>
-  )
+  );
 }

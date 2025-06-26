@@ -385,3 +385,13 @@ a {
       width: 25px !important;
      }
   }
+
+  @media (max-width: 800px) {
+    .card {
+  width: 140px;
+  height: 140px;
+}
+.card-inner{
+  margin: 0px;
+}
+  }

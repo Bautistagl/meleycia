@@ -40,6 +40,7 @@ export default async function EditProductPage({
           marca: product.marca,
           precio_oferta: product.precio_oferta,
           imageUrl: product.imageUrl,
+          destacado: product.descatado,
         }}
       />
     </div>

@@ -16,19 +16,79 @@
     justify-content: center;
 
   }
+/* product-section.css */
+
+.product-section {
+  padding: 2rem;
+  background-color: #f8f8f8;
+}
+
+.product-section h2 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.products-container {
+  display: grid;
+  /* By default, we want one column for mobile to enable carousel */
+  grid-auto-columns: 80%; /* Each item takes 80% of the container width */
+  grid-auto-flow: column; /* Items flow in a single row */
+  gap: 1.5rem; /* Space between products */
+  overflow-x: auto; /* Enable horizontal scrolling */
+  scroll-behavior: smooth; /* Smooth scrolling for navigation */
+  padding: 1rem;
+  -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  scroll-snap-type: x mandatory; /* Snap to items horizontally */
+  align-items: start; /* Align items to the start of their grid area */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+.products-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure each product card snaps correctly */
+.products-container > * {
+  scroll-snap-align: start; /* Snap to the start of each child element */
+}
+
+/* Media query for screens wider than 768px (e.g., tablets and up) */
+@media (min-width: 768px) {
   .products-container {
-    display: flex;
+    /* For tablets, show two products at a time */
+    grid-auto-columns: 45%; /* Each item takes 45% of the container width to show two */
     gap: 2rem;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    padding: 1rem;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    padding: 1.5rem;
+    max-width: 90%; /* Adjust max width for better visual */
+    margin: 0 auto;
   }
-  
-  .products-container::-webkit-scrollbar {
-    display: none;
+}
+
+/* Media query for screens wider than 1024px (e.g., desktops) */
+@media (min-width: 1024px) {
+  .products-container {
+    /* For desktops, show two products at a time with fixed columns */
+    grid-template-columns: repeat(2, 1fr); /* Two columns, equal width */
+    grid-auto-flow: unset; /* Disable column flow, use standard grid */
+    overflow-x: hidden; /* Hide horizontal scrollbar as it's no longer a carousel */
+    scroll-snap-type: none; /* Disable scroll snapping */
+    max-width: 1200px; /* Max width for the entire grid */
+    margin: 0 auto; /* Center the grid */
   }
+}
+
+/* Media query for screens wider than 1200px (e.g., larger desktops) */
+@media (min-width: 1200px) {
+  .products-container {
+    /* You had 4 products in your initial setup, so let's aim for 4 fixed columns here */
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2.5rem;
+  }
+}
   
   .product-card {
     flex: 0 0 auto;

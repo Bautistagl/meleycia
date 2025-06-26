@@ -14,7 +14,7 @@ export function RecentItems() {
       const { data, error } = await supabase
         .from("productos")
         .select(
-          "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl"
+          "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl, destacado"
         )
         .order("created_at", { ascending: false })
         .limit(6);
@@ -30,6 +30,7 @@ export function RecentItems() {
           marca: p.marca,
           imageUrl: p.imageUrl,
           precio_oferta: p.precio_oferta,
+          destacado: p.destacado,
         }));
         setRecentProducts(products);
       }
@@ -53,7 +54,6 @@ export function RecentItems() {
               <th>Nombre</th>
               <th>Categoria</th>
               <th>Precio</th>
-              <th>Stock</th>
 
               <th>Acciones</th>
             </tr>
@@ -64,7 +64,6 @@ export function RecentItems() {
                 <td>{product.nombre}</td>
                 <td>{product.categoria}</td>
                 <td>${product.precio.toFixed(2)}</td>
-                <td>{product.stock}</td>
 
                 <td>
                   <div className={styles.actions}>
@@ -74,9 +73,6 @@ export function RecentItems() {
                     >
                       <Edit size={16} />
                     </Link>
-                    <button className={styles.deleteButton}>
-                      <Trash2 size={16} />
-                    </button>
                   </div>
                 </td>
               </tr>

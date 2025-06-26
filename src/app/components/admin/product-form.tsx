@@ -17,6 +17,7 @@ interface ProductFormProps {
     marca?: string;
     precio_oferta?: number | null;
     imageUrl?: string;
+    destacado?: boolean;
   };
 }
 
@@ -25,22 +26,23 @@ export function ProductForm({ initialData }: ProductFormProps) {
     name: initialData?.name || "",
     category: initialData?.category || "",
     price: initialData?.price || 0,
-    stock: initialData?.stock || 0,
-    description: initialData?.description || "", 
+    stock: initialData?.stock || 1,
+    description: initialData?.description || "",
     marca: initialData?.marca || "",
     precio_oferta: initialData?.precio_oferta ?? "",
-    imageUrl: initialData?.imageUrl || ''
+    imageUrl: initialData?.imageUrl || "",
+    destacado: initialData?.destacado || false,
   });
   const [brands, setBrands] = useState<string[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null); 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialData?.imageUrl || null
   ); // Estado para la URL de la imagen
 
   // Obtener marcas desde Supabase al montar el componente
   useEffect(() => {
-    
     const fetchBrands = async () => {
       const { data, error } = await supabase.from("marcas").select("marca");
       if (error) {
@@ -65,7 +67,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     fetchCategorias();
     fetchBrands();
   }, []);
-    // Maneja el cambio en el input de tipo file
+  // Maneja el cambio en el input de tipo file
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -110,8 +112,16 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, category, price, stock, description, marca, precio_oferta } =
-      formData;
+    const {
+      name,
+      category,
+      price,
+      stock,
+      description,
+      marca,
+      precio_oferta,
+      destacado,
+    } = formData;
 
     let finalImageUrl: string | null = null;
 
@@ -136,14 +146,14 @@ export function ProductForm({ initialData }: ProductFormProps) {
           nombre: name,
           categoria: category,
           precio: price,
-          stock: stock > 0, 
+          stock: stock > 0,
           descripcion: description,
           marca: marca,
           precio_oferta: precio_oferta,
-          imageUrl: finalImageUrl, 
+          imageUrl: finalImageUrl,
+          destacado: destacado,
         })
         .eq("id", initialData.id);
-        
     } else {
       // Crear nuevo producto
       response = await supabase.from("productos").insert([
@@ -155,7 +165,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
           descripcion: description,
           marca: marca,
           precio_oferta: 0,
-          imageUrl: finalImageUrl, // Usa la URL final determinada
+          imageUrl: finalImageUrl,
+          destacado: destacado,
         },
       ]);
     }
@@ -185,14 +196,15 @@ export function ProductForm({ initialData }: ProductFormProps) {
         description: "",
         marca: "",
         precio_oferta: "",
-        imageUrl:''
+        imageUrl: "",
+        destacado: false,
       });
       setImageFile(null); // Limpiar el archivo de imagen
       setImageUrl(null); // Limpiar la URL de la imagen
     }
   };
 
-   return (
+  return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.formGrid}>
         <div className={styles.formSection}>
@@ -226,11 +238,15 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <option value="" disabled>
                 Seleccionar Categoria
               </option>
-              {categorias.map((category) => ( // Cambiado 'brand' a 'category' para mayor claridad
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+              {categorias.map(
+                (
+                  category // Cambiado 'brand' a 'category' para mayor claridad
+                ) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                )
+              )}
             </select>
           </div>
           <div className={styles.formGroup}>
@@ -270,22 +286,31 @@ export function ProductForm({ initialData }: ProductFormProps) {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    price: Number.parseFloat(e.target.value),
+                    price:
+                      e.target.value === ""
+                        ? 0
+                        : Number.parseFloat(e.target.value), // Or null, depending on your preference
                   })
                 }
                 required
               />
             </div>
             <div className={styles.formGroup}>
-              <label htmlFor="stock" className={styles.label}> {/* Cambiado id de category a stock */}
+              <label htmlFor="stock" className={styles.label}>
+                {" "}
+                {/* Cambiado id de category a stock */}
                 Stock
               </label>
               <select
                 id="stock" // Cambiado id de category a stock
                 className={styles.select}
                 value={formData.stock > 0 ? "true" : "false"} // Mapea el valor numérico de stock a string "true"/"false"
-                onChange={(e) =>
-                  setFormData({ ...formData, stock: e.target.value === "true" ? 1 : 0 }) // Convierte a número para el estado
+                onChange={
+                  (e) =>
+                    setFormData({
+                      ...formData,
+                      stock: e.target.value === "true" ? 1 : 0,
+                    }) // Convierte a número para el estado
                 }
               >
                 <option value="true">Disponible</option>
@@ -307,23 +332,25 @@ export function ProductForm({ initialData }: ProductFormProps) {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  precio_oferta: e.target.value === "" ? "" : Number.parseFloat(e.target.value),
+                  precio_oferta:
+                    e.target.value === ""
+                      ? 0
+                      : Number.parseFloat(e.target.value),
                 })
               }
               placeholder="Opcional"
             />
           </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="description" className={styles.label}>
-              Descripcion
+          <div className={styles.formGroup2}>
+            <label htmlFor="destacado" className={styles.label}>
+              Producto destacado
             </label>
-            <textarea
-              id="description"
-              className={styles.textarea}
-              rows={5}
-              value={formData.description}
+            <input
+              id="destacado"
+              type="checkbox"
+              checked={formData.destacado}
               onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
+                setFormData({ ...formData, destacado: e.target.checked })
               }
             />
           </div>
@@ -337,19 +364,22 @@ export function ProductForm({ initialData }: ProductFormProps) {
             <input
               id="image"
               type="file"
-              accept="image/*" // Solo acepta archivos de imagen
+              accept="image/*"
               onChange={handleImageChange}
               className={styles.fileInput} // Agrega una clase para estilizar el input de archivo
             />
             {/* Visualización de la imagen */}
             {imageUrl && (
               <div className={styles.imagePreviewContainer}>
-                <img src={imageUrl} alt="Vista previa" className={styles.imagePreview} />
+                <img
+                  src={imageUrl}
+                  alt="Vista previa"
+                  className={styles.imagePreview}
+                />
               </div>
             )}
             {!imageUrl && (
               <div className={styles.noImagePlaceholder}>
-                
                 <p>Selecciona una imagen</p>
               </div>
             )}
