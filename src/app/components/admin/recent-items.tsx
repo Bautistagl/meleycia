@@ -1,6 +1,6 @@
 'use client'
 import styles from "./recent-items.module.css"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit } from "lucide-react";
 import Link from "next/link"
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
