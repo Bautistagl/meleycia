@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
+
 import "./product-section.css";
 import { useEffect, useState } from "react";
 import { Producto } from "@/types";
 import { supabase } from "@/lib/supabase";
-import styles from "../../productos/components/ProductCard.module.css";
+
 import { ProductCard } from "@/app/productos/components/ProductCard";
 
 export default function ProductSection() {
