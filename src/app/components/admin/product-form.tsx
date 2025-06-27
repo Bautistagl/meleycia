@@ -304,7 +304,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <select
                 id="stock" // Cambiado id de category a stock
                 className={styles.select}
-                value={formData.stock > 0 ? "true" : "false"} // Mapea el valor numérico de stock a string "true"/"false"
+                value={formData.stock > 0 ? "true" : "false"}
                 onChange={
                   (e) =>
                     setFormData({

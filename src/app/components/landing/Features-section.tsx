@@ -2,6 +2,7 @@
 import React from "react";
 import "./features-section.css";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function FeaturesSection() {
   return (
@@ -17,7 +18,9 @@ export default function FeaturesSection() {
           excepcionales.
         </span>
         <div className="cta-container2">
-          <button className="cta-button">CONSULTAR PRECIOS</button>
+          <Link href="/productos">
+            <button className="cta-button">Ver Productos</button>
+          </Link>
         </div>
       </div>
       <div className="imagen-hero">

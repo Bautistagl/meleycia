@@ -20,7 +20,7 @@ export default function Home() {
       title: "50% OFF Baterías",
       subtitle: "Energizer - Oferta por tiempo limitado",
       ctaText: "Ver Ofertas",
-      ctaLink: "/ofertas",
+      ctaLink: "/productos",
     },
     {
       id: "2",
@@ -29,7 +29,7 @@ export default function Home() {
       title: "Productos de Limpieza",
       subtitle: "2x1 en productos seleccionados de marcas premium",
       ctaText: "Comprar Ahora",
-      ctaLink: "/limpieza",
+      ctaLink: "/productos",
     },
     {
       id: "3",
@@ -38,7 +38,7 @@ export default function Home() {
       title: "Herramientas Profesionales",
       subtitle: "Hasta 30% de descuento en toda la línea",
       ctaText: "Ver Catálogo",
-      ctaLink: "/herramientas",
+      ctaLink: "/productos",
     },
   ];
 

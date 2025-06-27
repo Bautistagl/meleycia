@@ -24,32 +24,26 @@ export default function CartSummary({ loading, items, onCheckout }: CartSummaryP
 
   return (
     <div className={styles.summary}>
-      <h2 className={styles.summaryTitle}>RESUMEN DEL PEDIDO</h2>
-
       <div className={styles.summaryContent}>
-
-
         <div className={`${styles.summaryRow} ${styles.totalRow}`}>
           <span>Total</span>
           <span>${total.toFixed(2)}</span>
         </div>
 
         <div className={styles.actions}>
-                    <button
-                className={styles.checkoutBtn} 
-                onClick={onCheckout}
-                disabled={loading || items.length === 0}
-            >
-                Realizar Pedido por WhatsApp
-            </button>
+          <button
+            className={styles.checkoutBtn}
+            onClick={onCheckout}
+            disabled={loading || items.length === 0}
+          >
+            Realizar Pedido por WhatsApp
+          </button>
 
           <a href="/productos" className={styles.continueBtn}>
             CONTINUAR PEDIDO
           </a>
         </div>
-
-   
       </div>
     </div>
-  )
+  );
 }
