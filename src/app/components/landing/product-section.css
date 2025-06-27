@@ -1,10 +1,4 @@
-.product-section {
-    position: relative;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-    overflow: hidden;
-  }
+
   
   .product-section h2{
     font-size: 3rem;
@@ -19,21 +13,32 @@
 /* product-section.css */
 
 .product-section {
-  padding: 2rem;
-  background-color: #f8f8f8;
+  position: relative; /* Importante para posicionar los botones si usas absolute */
+  padding: 2rem 0; /* Agrega algo de padding si no lo tienes */
+  max-width: 90vw; /* O el ancho máximo que desees para tu sección */
+  margin: 0 auto; /* Centra la sección */
 }
 
 .product-section h2 {
   text-align: center;
-  font-size: 2.5rem;
   margin-bottom: 2rem;
+  font-size: 2rem;
   color: #333;
+}
+
+
+.carousel-wrapper {
+  position: relative; /* Para que los botones se posicionen en relación a este wrapper */
+  display: flex; /* Para que los botones y el carrusel estén en línea */
+  align-items: center; /* Centra verticalmente los elementos */
+  gap: 1rem; /* Espacio entre los botones y el carrusel */
+  padding: 0 1rem; /* Pequeño padding para que los botones no estén pegados al borde */
 }
 
 .products-container {
   display: grid;
   /* By default, we want one column for mobile to enable carousel */
-  grid-auto-columns: 80%; /* Each item takes 80% of the container width */
+  grid-auto-columns: 25%; /* Each item takes 80% of the container width */
   grid-auto-flow: column; /* Items flow in a single row */
   gap: 1.5rem; /* Space between products */
   overflow-x: auto; /* Enable horizontal scrolling */
@@ -44,6 +49,7 @@
   scroll-snap-type: x mandatory; /* Snap to items horizontally */
   align-items: start; /* Align items to the start of their grid area */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  flex-grow: 1; /* Hace que el contenedor de productos ocupe el espacio restante */
 }
 
 /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
@@ -56,39 +62,61 @@
   scroll-snap-align: start; /* Snap to the start of each child element */
 }
 
-/* Media query for screens wider than 768px (e.g., tablets and up) */
-@media (min-width: 768px) {
+/* --- */
+/* Estilos para los botones de navegación */
+.carousel-button {
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+  color: white;
+  border: none;
+  border-radius: 50%; /* Botones redondos */
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0; /* Evita que los botones se achiquen */
+  z-index: 10; /* Asegura que estén por encima de los productos */
+}
+
+.carousel-button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Puedes ajustar la posición de los botones si los quieres superpuestos */
+/* .carousel-button.prev {
+  left: 0;
+}
+
+.carousel-button.next {
+  right: 0;
+} */
+
+/* --- */
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .products-container {
-    /* For tablets, show two products at a time */
-    grid-auto-columns: 45%; /* Each item takes 45% of the container width to show two */
-    gap: 2rem;
-    padding: 1.5rem;
-    max-width: 90%; /* Adjust max width for better visual */
-    margin: 0 auto;
+    grid-auto-columns: 80%; /* Para móvil, muestra un producto casi completo */
+    padding: 1rem;
+  }
+  .carousel-button {
+    /* Opcional: ocultar botones en mobile si el arrastre es suficiente */
+    display: none;
+  }
+  .carousel-wrapper {
+    padding: 0; /* Remover padding si ocultas los botones */
+    gap: 0;
   }
 }
 
-/* Media query for screens wider than 1024px (e.g., desktops) */
-@media (min-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   .products-container {
-    /* For desktops, show two products at a time with fixed columns */
-    grid-template-columns: repeat(2, 1fr); /* Two columns, equal width */
-    grid-auto-flow: unset; /* Disable column flow, use standard grid */
-    overflow-x: hidden; /* Hide horizontal scrollbar as it's no longer a carousel */
-    scroll-snap-type: none; /* Disable scroll snapping */
-    max-width: 1200px; /* Max width for the entire grid */
-    margin: 0 auto; /* Center the grid */
+    grid-auto-columns: 33%; /* Tres productos en pantallas medianas */
   }
 }
 
-/* Media query for screens wider than 1200px (e.g., larger desktops) */
-@media (min-width: 1200px) {
-  .products-container {
-    /* You had 4 products in your initial setup, so let's aim for 4 fixed columns here */
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2.5rem;
-  }
-}
   
   .product-card {
     flex: 0 0 auto;

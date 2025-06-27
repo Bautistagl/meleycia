@@ -72,10 +72,10 @@ export function ProductsTable() {
             <tr>
               <th>Nombre</th>
               <th>Categoria</th>
+              <th>Marca</th>
               <th>Precio</th>
-              <th>Stock</th>
 
-              <th>Actions</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -83,8 +83,8 @@ export function ProductsTable() {
               <tr key={product.id}>
                 <td>{product.nombre}</td>
                 <td>{product.categoria}</td>
+                <td>{product.marca}</td>
                 <td>${product.precio.toFixed(2)}</td>
-                <td>{product.stock}</td>
 
                 <td>
                   <div className={styles.actions}>

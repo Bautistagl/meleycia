@@ -3,14 +3,14 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import styles from "./admin-sidebar.module.css"
-import { LayoutDashboard, Package, ShoppingCart, LogOut } from "lucide-react"
+import { Package, ShoppingCart, LogOut, Tag, Layers } from "lucide-react";
 
 export function AdminSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const isActive = (path: string) => {
-    return pathname?.startsWith(path) ? styles.active : ""
-  }
+    return pathname?.startsWith(path) ? styles.active : "";
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -20,17 +20,10 @@ export function AdminSidebar() {
           <ul className={styles.navList}>
             <li>
               <Link
-                href="/admin"
-                className={`${styles.navLink} ${isActive("/admin") && pathname === "/admin" ? styles.active : ""}`}
-              >
-                <LayoutDashboard size={20} />
-                <span>Principal</span>
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="/admin/productos"
-                className={`${styles.navLink} ${isActive("/admin/products") ? styles.active : ""}`}
+                className={`${styles.navLink} ${
+                  isActive("/admin/products") ? styles.active : ""
+                }`}
               >
                 <Package size={20} />
                 <span>Productos</span>
@@ -39,21 +32,42 @@ export function AdminSidebar() {
             <li>
               <Link
                 href="/admin/actualizacion"
-                className={`${styles.navLink} ${isActive("/admin/orders") ? styles.active : ""}`}
+                className={`${styles.navLink} ${
+                  isActive("/admin/actualizacion") ? styles.active : ""
+                }`}
               >
                 <ShoppingCart size={20} />
                 <span>Actualizar precios</span>
               </Link>
             </li>
-
-
+            <li>
+              <Link
+                href="/admin/marcas"
+                className={`${styles.navLink} ${
+                  isActive("/admin/marcas") ? styles.active : ""
+                }`}
+              >
+                <Tag size={20} />
+                <span>Nueva Marca</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/categorias"
+                className={`${styles.navLink} ${
+                  isActive("/admin/categorias") ? styles.active : ""
+                }`}
+              >
+                <Layers size={20} />
+                <span>Nueva Categoria</span>
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div className={styles.navGroup}>
           <h3 className={styles.navTitle}>Settings</h3>
           <ul className={styles.navList}>
-      
             <li>
               <button className={styles.navLink}>
                 <LogOut size={20} />
@@ -64,5 +78,5 @@ export function AdminSidebar() {
         </div>
       </nav>
     </aside>
-  )
+  );
 }

@@ -67,7 +67,7 @@ const Navbar = () => {
       </div>
       <div className={`${styles.navLinks} ${isOpen ? styles.open : ""}`}>
         {admin ? (
-          <Link href="/admin" className={styles.navLink}>
+          <Link href="/admin/productos" className={styles.navLink}>
             Backoffice
           </Link>
         ) : (

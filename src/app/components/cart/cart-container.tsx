@@ -14,9 +14,10 @@ import CartSummary from "./cart-summary";
 import EmptyCart from "./empty-cart";
 import styles from "./cart.module.css";
 import { generarMensajeWhatsappCarrito } from "@/services/whatsapp";
+import Swal from "sweetalert2";
 
 export default function CartContainer() {
-  const { user } = useAuth(); // Asumo que useAuth también proporciona el perfil del usuario (nombre, teléfono)
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState<CarritoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
@@ -116,9 +117,10 @@ export default function CartContainer() {
     window.open(urlWhatsapp, "_blank");
 
     setLoading(false);
-    alert(
-      "¡Tu pedido ha sido enviado! Serás redirigido a WhatsApp para confirmar."
-    );
+    Swal.fire({
+      title: "Pedido enviado por whatsapp",
+      icon: "success",
+    });
 
     const nuevoPedido = await crearPedidoDesdeCarrito(user.id, cartItems);
 

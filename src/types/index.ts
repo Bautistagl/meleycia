@@ -42,3 +42,28 @@ export interface Cliente {
   email: string;
   telefono:number;
 }
+export interface Brand {
+  id?: string;
+  name: string;
+  description: string;
+  website?: string;
+  logo?: File | null;
+  country?: string;
+  foundedYear?: number;
+}
+
+export interface BrandFormData {
+  marca: string;
+}
+export interface CatFormData {
+  nombre: string;
+}
+
+export interface FormErrors {
+  name?: string;
+  description?: string;
+  website?: string;
+  logo?: string;
+  country?: string;
+  foundedYear?: string;
+}

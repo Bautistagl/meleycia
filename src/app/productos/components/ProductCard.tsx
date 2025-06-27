@@ -37,7 +37,7 @@ export function ProductCard({ producto }: ProductoCardProps) {
         icon: "success",
         title: "Producto añadido al pedido",
         showConfirmButton: false,
-        timer: 1500,
+        timer: 1000,
         customClass: {
           popup: "swal-horizontal-layout",
           icon: "swal-small-icon",
@@ -57,6 +57,7 @@ export function ProductCard({ producto }: ProductoCardProps) {
       setQuantity(1);
     }
   };
+
   return (
     <div>
       {showLoginModal && (
@@ -107,7 +108,7 @@ export function ProductCard({ producto }: ProductoCardProps) {
             />
           ) : (
             <img
-              src="/placeholder-product.jpg"
+              src="/placeholder.svg"
               alt="Imagen no disponible"
               className={styles.image}
             />

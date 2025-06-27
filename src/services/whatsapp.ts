@@ -12,19 +12,19 @@ export const generarMensajeWhatsappCarrito = (
   itemsCarrito: (CarritoItem & { producto: Producto })[], // Asegúrate de que 'producto' esté incluido
   nombreCliente?: string
 ): string => {
-  let mensaje = `¡Hola! Soy ${nombreCliente ? nombreCliente : 'un cliente'} y este es mi pedido:\n\n`;
+  let mensaje = `¡Hola! Queria hacer el siguiente pedido:\n\n`;
 
   let totalGeneral = 0;
 
-  itemsCarrito.forEach(item => {
-    const nombreProducto = item.producto?.nombre || 'Producto Desconocido';
+  itemsCarrito.forEach((item) => {
+    const nombreProducto = item.producto?.nombre || "Producto Desconocido";
     const precioUnitario = item.producto?.precio || 0; // Usar el precio unitario del carrito
     const subtotalItem = item.cantidad * precioUnitario;
 
-    mensaje += `- ${item.cantidad} x ${nombreProducto} ($${precioUnitario.toFixed(2)} c/u) = $${subtotalItem.toFixed(2)}\n`;
+    mensaje += `- ${item.cantidad} x ${nombreProducto}\n`;
     totalGeneral += subtotalItem;
   });
-
+  mensaje += `\n\n Mi mail: ${nombreCliente}`;
   mensaje += `\nTotal del pedido: $${totalGeneral.toFixed(2)}`;
   mensaje += `\n\n¡Espero su confirmación!`;
 

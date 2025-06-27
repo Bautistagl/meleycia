@@ -59,7 +59,8 @@ const LoginForm: React.FC<LoginFormProps> = () => {
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError(authError.message)
+      setError("Credenciales invalidas");
+      setIsLoading(false);
     } else {
 
       localStorage.setItem('meleyciamail', email) 
