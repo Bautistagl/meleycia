@@ -31,36 +31,57 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!formData.marca.trim()) { // Changed from 'name' to 'marca'
-      setError("El nombre de la marca es requerido");
-      return;
+  if (!formData.marca.trim()) {
+    setError("El nombre de la marca es requerido");
+    return;
+  }
+
+  setIsLoading(true);
+  setSuccessMessage("");
+
+  try {
+    const { error: supabaseError } = await supabase
+      .from("marcas") // Specify the table name
+      .insert([{ marca: formData.marca }]); // Insert the 'marca' value
+
+    if (supabaseError) {
+      throw supabaseError;
     }
 
-    setIsLoading(true);
-    setSuccessMessage("");
+    setSuccessMessage("Marca agregada exitosamente");
+    // Reset form
+    setFormData({ marca: "" });
+  } catch (error: unknown) {
+    // Change 'any' to 'unknown'
+    console.error("Error submitting form:", error);
 
-    try {
-      const {  error: supabaseError } = await supabase
-        .from("marcas") // Specify the table name
-        .insert([{ marca: formData.marca }]); // Insert the 'marca' value
+    let errorMessage = "Por favor intenta nuevamente.";
 
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      setSuccessMessage("Marca agregada exitosamente");
-      // Reset form
-      setFormData({ marca: "" }); // Changed from 'name' to 'marca'
-    } catch (error: any) { // Type 'error' as 'any' for now to catch different error types
-      console.error("Error submitting form:", error);
-      setError(`Error al guardar la marca: ${error.message || "Por favor intenta nuevamente."}`);
-    } finally {
-      setIsLoading(false);
+    // --- Type Narrowing to handle different error types ---
+    if (error instanceof Error) {
+      // If the error is an instance of the built-in Error class (or a custom error extending it)
+      errorMessage = error.message;
+    } else if (
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error
+    ) {
+      // If the error is an object with a 'message' property (e.g., from an API response)
+      errorMessage = (error as { message: string }).message;
+    } else if (typeof error === "string") {
+      // If the error is a simple string
+      errorMessage = error;
     }
-  };
+    // --- End Type Narrowing ---
+
+    setError(`Error al guardar la marca: ${errorMessage}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleCancel = () => {
     if (onCancel) {
