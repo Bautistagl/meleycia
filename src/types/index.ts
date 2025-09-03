@@ -10,6 +10,7 @@ export interface Producto {
   precio_oferta: number | null; // <-- Missing in your map
   imageUrl: string;
   destacado: boolean;
+  codigo: string;
 }
 
 export interface CarritoItem {

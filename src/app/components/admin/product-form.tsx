@@ -18,6 +18,7 @@ interface ProductFormProps {
     precio_oferta?: number | null;
     imageUrl?: string;
     destacado?: boolean;
+    codigo?: string;
   };
 }
 
@@ -32,6 +33,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     precio_oferta: initialData?.precio_oferta ?? 0,
     imageUrl: initialData?.imageUrl || "",
     destacado: initialData?.destacado || false,
+    codigo: initialData?.codigo || "",
   });
   const [brands, setBrands] = useState<string[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
@@ -121,6 +123,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       marca,
       precio_oferta,
       destacado,
+      codigo,
     } = formData;
 
     let finalImageUrl: string | null = null;
@@ -152,6 +155,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           precio_oferta: precio_oferta,
           imageUrl: finalImageUrl,
           destacado: destacado,
+          codigo: codigo,
         })
         .eq("id", initialData.id);
     } else {
@@ -167,6 +171,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           precio_oferta: precio_oferta,
           imageUrl: finalImageUrl,
           destacado: destacado,
+          codigo: codigo,
         },
       ]);
     }
@@ -198,6 +203,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
         precio_oferta: 0,
         imageUrl: "",
         destacado: false,
+        codigo: "",
       });
       setImageFile(null); // Limpiar el archivo de imagen
       setImageUrl(null); // Limpiar la URL de la imagen
@@ -270,6 +276,23 @@ export function ProductForm({ initialData }: ProductFormProps) {
                 </option>
               ))}
             </select>
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="precio_oferta" className={styles.label}>
+              Codigo
+            </label>
+            <input
+              id="precio_oferta"
+              className={styles.input}
+              value={formData.codigo}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  codigo: e.target.value,
+                })
+              }
+              placeholder="Ingresar codigo"
+            />
           </div>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>

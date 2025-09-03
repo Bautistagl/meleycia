@@ -41,6 +41,7 @@ export default async function EditProductPage({
           precio_oferta: product.precio_oferta,
           imageUrl: product.imageUrl,
           destacado: product.descatado,
+          codigo: product.codigo,
         }}
       />
     </div>
