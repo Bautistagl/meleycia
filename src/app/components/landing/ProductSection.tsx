@@ -17,7 +17,7 @@ export default function ProductSection() {
       const { data, error } = await supabase
         .from("productos")
         .select(
-          "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl, destacado"
+          "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl, destacado, codigo"
         )
         .eq("destacado", true)
         .order("created_at", { ascending: false })
@@ -35,6 +35,7 @@ export default function ProductSection() {
           imageUrl: p.imageUrl,
           precio_oferta: p.precio_oferta,
           destacado: p.destacado,
+          codigo: p.codigo,
         }));
         setRecentProducts(products);
       }
