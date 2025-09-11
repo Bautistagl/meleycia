@@ -10,6 +10,17 @@ import { Producto } from "@/types";
 
 const ITEMS_PER_PAGE = 7;
 
+// Función auxiliar para formatear un número a formato de moneda (ej: 2.343,33)
+const formatMoney = (value: number | null): string => {
+  if (value === null || isNaN(value)) {
+    return "";
+  }
+  return value.toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 export function ProductsTable() {
   const [products, setProducts] = useState<Producto[]>([]);
   const [page, setPage] = useState(1);
@@ -85,9 +96,8 @@ export function ProductsTable() {
                 <td>{product.nombre}</td>
                 <td>{product.categoria}</td>
                 <td>{product.marca}</td>
-                <td>${product.precio.toFixed(2)}</td>
+                <td>${formatMoney(product.precio)}</td>
                 <td>{product.codigo}</td>
-
                 <td>
                   <div className={styles.actions}>
                     <Link

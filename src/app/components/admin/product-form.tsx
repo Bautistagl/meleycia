@@ -22,6 +22,26 @@ interface ProductFormProps {
   };
 }
 
+// Función auxiliar para formatear un número a formato de moneda (ej: 2.343,33)
+const formatMoney = (value: number | null): string => {
+  if (value === null || isNaN(value)) {
+    return "";
+  }
+  // Usamos 'es-AR' para obtener el formato de punto para miles y coma para decimales
+  return value.toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+// Función auxiliar para limpiar un string de moneda y convertirlo a número
+const parseMoney = (value: string): number | null => {
+  const cleaned = value.replace(/\./g, "").replace(",", ".");
+  const numericValue = Number.parseFloat(cleaned);
+  // Si el valor no es un número válido, devolvemos null
+  return isNaN(numericValue) ? null : numericValue;
+};
+
 export function ProductForm({ initialData }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
@@ -30,20 +50,34 @@ export function ProductForm({ initialData }: ProductFormProps) {
     stock: initialData?.stock || 1,
     description: initialData?.description || "",
     marca: initialData?.marca || "",
-    precio_oferta: initialData?.precio_oferta ?? 0,
+    precio_oferta: initialData?.precio_oferta || null,
     imageUrl: initialData?.imageUrl || "",
     destacado: initialData?.destacado || false,
     codigo: initialData?.codigo || "",
   });
+
   const [brands, setBrands] = useState<string[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
-
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialData?.imageUrl || null
   ); // Estado para la URL de la imagen
 
-  // Obtener marcas desde Supabase al montar el componente
+  // Estados locales para los valores formateados de los inputs de precio
+  const [formattedPrice, setFormattedPrice] = useState(
+    formatMoney(initialData?.price || 0)
+  );
+  const [formattedOfferPrice, setFormattedOfferPrice] = useState(
+    formatMoney(initialData?.precio_oferta ?? null)
+  );
+
+  // Sincronizar los estados locales con el formData inicial
+  useEffect(() => {
+    setFormattedPrice(formatMoney(formData.price));
+    setFormattedOfferPrice(formatMoney(formData.precio_oferta));
+  }, [formData.price, formData.precio_oferta]);
+
+  // Obtener marcas y categorías desde Supabase al montar el componente
   useEffect(() => {
     const fetchBrands = async () => {
       const { data, error } = await supabase.from("marcas").select("marca");
@@ -51,9 +85,9 @@ export function ProductForm({ initialData }: ProductFormProps) {
         console.error("Error fetching brands:", error.message);
         return;
       }
-
       setBrands(data.map((b) => b.marca));
     };
+
     const fetchCategorias = async () => {
       const { data, error } = await supabase
         .from("categorias")
@@ -62,19 +96,18 @@ export function ProductForm({ initialData }: ProductFormProps) {
         console.error("Error fetching categorias:", error.message);
         return;
       }
-
       setCategorias(data.map((b) => b.nombre));
     };
 
     fetchCategorias();
     fetchBrands();
   }, []);
+
   // Maneja el cambio en el input de tipo file
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImageFile(file);
-      // Previsualiza la imagen si es necesario
       setImageUrl(URL.createObjectURL(file));
     } else {
       setImageFile(null);
@@ -84,14 +117,14 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   // Función para subir la imagen a Supabase Storage
   const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return imageUrl; // Si no hay nuevo archivo, devuelve la URL existente
+    if (!imageFile) return imageUrl;
 
     const fileName = `${Date.now()}-${imageFile.name}`;
     const { error } = await supabase.storage
-      .from("mele-imagenes") // Reemplaza 'product-images' con el nombre de tu bucket
+      .from("mele-imagenes")
       .upload(fileName, imageFile, {
         cacheControl: "3600",
-        upsert: false, // Asegúrate de que no sobrescriba si ya existe un archivo con el mismo nombre
+        upsert: false,
       });
 
     if (error) {
@@ -104,13 +137,13 @@ export function ProductForm({ initialData }: ProductFormProps) {
       return null;
     }
 
-    // Obtener la URL pública de la imagen
     const { data: publicUrlData } = supabase.storage
       .from("mele-imagenes")
       .getPublicUrl(fileName);
 
     return publicUrlData.publicUrl;
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -128,28 +161,24 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
     let finalImageUrl: string | null = null;
 
-    // Solo intenta subir una imagen si hay un archivo nuevo seleccionado
     if (imageFile) {
       finalImageUrl = await uploadImage();
       if (!finalImageUrl) {
-        // Si se intentó subir una imagen nueva pero falló, detén el proceso
         return;
       }
     } else {
-      // Si no hay un nuevo archivo de imagen, usa la URL existente (original del producto o null)
       finalImageUrl = initialData?.imageUrl || null;
     }
 
     let response;
     if (initialData?.id) {
-      // Actualizar producto
       response = await supabase
         .from("productos")
         .update({
           nombre: name,
           categoria: category,
           precio: price,
-          stock: stock > 0,
+          stock: stock > 0, // Asegura que se guarde como booleano
           descripcion: description,
           marca: marca,
           precio_oferta: precio_oferta,
@@ -159,7 +188,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
         })
         .eq("id", initialData.id);
     } else {
-      // Crear nuevo producto
       response = await supabase.from("productos").insert([
         {
           nombre: name,
@@ -205,8 +233,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
         destacado: false,
         codigo: "",
       });
-      setImageFile(null); // Limpiar el archivo de imagen
-      setImageUrl(null); // Limpiar la URL de la imagen
+      setImageFile(null);
+      setImageUrl(null);
     }
   };
 
@@ -244,15 +272,11 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <option value="" disabled>
                 Seleccionar Categoria
               </option>
-              {categorias.map(
-                (
-                  category // Cambiado 'brand' a 'category' para mayor claridad
-                ) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                )
-              )}
+              {categorias.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
           </div>
           <div className={styles.formGroup}>
@@ -278,11 +302,11 @@ export function ProductForm({ initialData }: ProductFormProps) {
             </select>
           </div>
           <div className={styles.formGroup}>
-            <label htmlFor="precio_oferta" className={styles.label}>
+            <label htmlFor="codigo" className={styles.label}>
               Codigo
             </label>
             <input
-              id="precio_oferta"
+              id="codigo"
               className={styles.input}
               value={formData.codigo}
               onChange={(e) =>
@@ -302,38 +326,35 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <input
                 id="price"
                 className={styles.input}
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) =>
+                type="text" // Cambiado a "text" para el formato de dinero
+                value={formattedPrice}
+                onChange={(e) => {
+                  setFormattedPrice(e.target.value);
+                }}
+                onBlur={() => {
+                  const numericValue = parseMoney(formattedPrice);
                   setFormData({
                     ...formData,
-                    price:
-                      e.target.value === ""
-                        ? 0
-                        : Number.parseFloat(e.target.value), // Or null, depending on your preference
-                  })
-                }
+                    price: numericValue ?? 0,
+                  });
+                  setFormattedPrice(formatMoney(numericValue));
+                }}
                 required
               />
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="stock" className={styles.label}>
-                {" "}
-                {/* Cambiado id de category a stock */}
                 Stock
               </label>
               <select
-                id="stock" // Cambiado id de category a stock
+                id="stock"
                 className={styles.select}
                 value={formData.stock > 0 ? "true" : "false"}
-                onChange={
-                  (e) =>
-                    setFormData({
-                      ...formData,
-                      stock: e.target.value === "true" ? 1 : 0,
-                    }) // Convierte a número para el estado
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    stock: e.target.value === "true" ? 1 : 0,
+                  })
                 }
               >
                 <option value="true">Disponible</option>
@@ -348,19 +369,19 @@ export function ProductForm({ initialData }: ProductFormProps) {
             <input
               id="precio_oferta"
               className={styles.input}
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.precio_oferta}
-              onChange={(e) =>
+              type="text" // Cambiado a "text"
+              value={formattedOfferPrice}
+              onChange={(e) => {
+                setFormattedOfferPrice(e.target.value);
+              }}
+              onBlur={() => {
+                const numericValue = parseMoney(formattedOfferPrice);
                 setFormData({
                   ...formData,
-                  precio_oferta:
-                    e.target.value === ""
-                      ? 0
-                      : Number.parseFloat(e.target.value),
-                })
-              }
+                  precio_oferta: numericValue,
+                });
+                setFormattedOfferPrice(formatMoney(numericValue));
+              }}
               placeholder="Opcional"
             />
           </div>
@@ -389,9 +410,8 @@ export function ProductForm({ initialData }: ProductFormProps) {
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className={styles.fileInput} // Agrega una clase para estilizar el input de archivo
+              className={styles.fileInput}
             />
-            {/* Visualización de la imagen */}
             {imageUrl && (
               <div className={styles.imagePreviewContainer}>
                 <img

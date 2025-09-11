@@ -10,6 +10,17 @@ interface ProductoCardProps {
   producto: Producto;
 }
 
+// Función auxiliar para formatear un número a formato de moneda (ej: 2.343,33)
+const formatMoney = (value: number | null): string => {
+  if (value === null || isNaN(value)) {
+    return "";
+  }
+  return value.toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 export function ProductCard({ producto }: ProductoCardProps) {
   const { user } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -48,6 +59,7 @@ export function ProductCard({ producto }: ProductoCardProps) {
       alert("Error al añadir producto al carrito.");
     }
   };
+
   const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value, 10);
 
@@ -134,11 +146,11 @@ export function ProductCard({ producto }: ProductoCardProps) {
           producto.precio_oferta < producto.precio ? (
             <div className={styles.pricingContainer}>
               <div className={styles.originalPrice}>
-                ${producto.precio.toFixed(2)}
+                ${formatMoney(producto.precio)} {/* <-- Aplicado el formato */}
               </div>
               <div className={styles.offerPrice}>
                 <span className={styles.offerPriceText}>
-                  ${producto.precio_oferta.toFixed(2)}
+                  ${formatMoney(producto.precio_oferta)} {/* <-- Aplicado el formato */}
                 </span>
                 <span className={styles.discountPercentage}>
                   {Math.round(
@@ -151,11 +163,10 @@ export function ProductCard({ producto }: ProductoCardProps) {
               </div>
             </div>
           ) : (
-            <div className={styles.price}>${producto.precio.toFixed(2)}</div>
+            <div className={styles.price}>${formatMoney(producto.precio)}</div> /* <-- Aplicado el formato */
           )}
 
           <div className={styles.actionsContainer}>
-            {" "}
             <input
               type="number"
               min="1"
