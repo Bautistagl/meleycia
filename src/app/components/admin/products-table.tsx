@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import styles from "./products-table.module.css";
-import { Edit, Trash2, Search } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 import { supabase } from "@/lib/supabase";
 import { Producto } from "@/types";
+import { Search } from "@/app/productos/components/Search";
+import { Filters } from "@/app/productos/components/Filters";
+import { Pagination } from "@/app/productos/components/Pagination";
 
 const ITEMS_PER_PAGE = 7;
 
@@ -23,59 +26,85 @@ const formatMoney = (value: number | null): string => {
 
 export function ProductsTable() {
   const [products, setProducts] = useState<Producto[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [filteredProducts, setFilteredProducts] = useState<Producto[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    category: "",
+    brand: "",
+  });
 
+  // Get unique categories and brands for filters
+  const categories = [...new Set(products.map((product) => product.categoria))];
+  const brands = [...new Set(products.map((product) => product.marca))];
+
+  // Fetch all products once on mount
   useEffect(() => {
-    async function fetchProducts() {
-      const from = (page - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
-      const [{ data, error }, { count }] = await Promise.all([
-        supabase
-          .from("productos")
-          .select(
-            "id, nombre, categoria, precio, stock, created_at, descripcion, marca, precio_oferta, imageUrl, destacado, codigo",
-            { count: "exact" }
-          )
-          .order("created_at", { ascending: false })
-          .range(from, to),
-        supabase.from("productos").select("*", { count: "exact", head: true }),
-      ]);
-
-      if (!error && data) {
-        const mapped = data.map((p) => ({
-          id: p.id,
-          nombre: p.nombre,
-          categoria: p.categoria,
-          precio: p.precio,
-          stock: p.stock,
-          description: p.descripcion,
-          marca: p.marca,
-          imageUrl: p.imageUrl,
-          precio_oferta: p.precio_oferta,
-          destacado: p.destacado,
-          codigo: p.codigo,
-        }));
-        setProducts(mapped);
-        setTotalPages(Math.ceil((count ?? 0) / ITEMS_PER_PAGE));
+    const fetchProductos = async () => {
+      const { data, error } = await supabase.from("productos").select("*");
+      if (error) {
+        console.error("Error fetching productos:", error.message);
+        return;
       }
+
+      setProducts(data);
+      setFilteredProducts(data);
+    };
+    fetchProductos();
+  }, []);
+
+  // Filter products based on search term and filters
+  useEffect(() => {
+    let result = [...products];
+
+    if (searchTerm) {
+      result = result.filter(
+        (product) =>
+          (product.nombre ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (product.description ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+      );
     }
 
-    fetchProducts();
-  }, [page]);
+    if (filters.category) {
+      result = result.filter(
+        (product) => product.categoria === filters.category
+      );
+    }
+
+    if (filters.brand) {
+      result = result.filter((product) => product.marca === filters.brand);
+    }
+
+    setFilteredProducts(result);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchTerm, filters, products]);
+
+  // Pagination logic
+  const indexOfLastProduct = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstProduct = indexOfLastProduct - ITEMS_PER_PAGE;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className={styles.container}>
       <div className={styles.filters}>
         <div className={styles.search}>
-          <Search className={styles.searchIcon} size={16} />
-          <input
-            type="text"
-            placeholder="Buscar productos..."
-            className={styles.searchInput}
-          />
+          <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </div>
+        <Filters
+          categories={categories}
+          brands={brands}
+          filters={filters}
+          setFilters={setFilters}
+        />
       </div>
 
       <div className={styles.tableContainer}>
@@ -91,7 +120,7 @@ export function ProductsTable() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
+            {currentProducts.map((product) => (
               <tr key={product.id}>
                 <td>{product.nombre}</td>
                 <td>{product.categoria}</td>
@@ -120,33 +149,14 @@ export function ProductsTable() {
       </div>
 
       <div className={styles.pagination}>
-        <button
-          className={styles.paginationButton}
-          onClick={() => setPage((p) => Math.max(p - 1, 1))}
-          disabled={page === 1}
-        >
-          Previous
-        </button>
-        <div className={styles.pages}>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              className={`${styles.paginationButton} ${
-                p === page ? styles.activePage : ""
-              }`}
-              onClick={() => setPage(p)}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-        <button
-          className={styles.paginationButton}
-          onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-          disabled={page === totalPages}
-        >
-          Next
-        </button>
+        {filteredProducts.length > ITEMS_PER_PAGE && (
+          <Pagination
+            productsPerPage={ITEMS_PER_PAGE}
+            totalProducts={filteredProducts.length}
+            currentPage={currentPage}
+            paginate={paginate}
+          />
+        )}
       </div>
     </div>
   );

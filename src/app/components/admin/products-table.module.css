@@ -5,6 +5,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  width: 80vw;
 }
 
 .filters {
@@ -126,39 +127,58 @@
   background-color: #fecaca;
 }
 
+/* styles.module.css */
+
 .pagination {
+  width: 75vw;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
+  gap: 10px; /* Espacio entre los elementos */
+  padding: 10px 0; /* Un poco de padding vertical */
+  overflow-x: auto; /* Permite desplazamiento horizontal */
+  margin: auto;
 }
 
 .pages {
   display: flex;
-  gap: 4px;
+  flex-wrap: nowrap; /* Evita que los números salten a la siguiente línea */
+  overflow-x: auto; /* Agrega un scrollbar horizontal si hay demasiados números */
+  -webkit-overflow-scrolling: touch; /* Mejora el scroll en dispositivos iOS */
+  gap: 5px; /* Espacio entre los botones de números */
 }
 
 .paginationButton {
-  padding: 6px 12px;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f0f0f0;
   cursor: pointer;
+  white-space: nowrap; /* Evita que el texto del botón se rompa */
+  transition: background-color 0.3s ease;
 }
 
-.paginationButton:hover:not(:disabled) {
-  background-color: #f9fafb;
+.paginationButton:hover {
+  background-color: #e0e0e0;
+}
+
+.activePage {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 
 .paginationButton:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .activePage {
   background-color: #fee2e2;
   color: #dc2626;
   border-color: #dc2626;
+}
+.ellipsis {
+  padding: 0 5px;
+  color: #555; /* O el color que desees */
 }
