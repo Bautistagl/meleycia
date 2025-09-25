@@ -21,7 +21,7 @@ export const generarMensajeWhatsappCarrito = (
     const precioUnitario = item.producto?.precio || 0; // Usar el precio unitario del carrito
     const subtotalItem = item.cantidad * precioUnitario;
 
-    mensaje += `- ${item.cantidad} x ${nombreProducto}\n`;
+    mensaje += `- ${item.cantidad} x ${nombreProducto}(codigo ${item.codigo})\n`;
     totalGeneral += subtotalItem;
   });
   mensaje += `\n\n Mi mail: ${nombreCliente}`;

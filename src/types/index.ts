@@ -15,15 +15,16 @@ export interface Producto {
 
 export interface CarritoItem {
   id: number;
-  cliente_id?: string; 
+  cliente_id?: string;
   producto_id: number;
-  pedido_id?: string; 
+  pedido_id?: string;
   cantidad: number;
   precio_unitario: number;
-  precio_total:number;
-  descripcion:string,
-  foto:string,
-  marca:string,
+  precio_total: number;
+  descripcion: string;
+  foto: string;
+  marca: string;
+  codigo: string;
   producto: Producto; // Para hacer joins y tener la info del producto
 }
 

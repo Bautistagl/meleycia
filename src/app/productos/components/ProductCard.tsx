@@ -32,6 +32,7 @@ export function ProductCard({ producto }: ProductoCardProps) {
       return;
     }
     const clienteId = user.id;
+ 
     const addedItem = await agregarProductoAlCarrito(
       clienteId,
       producto.id,
@@ -40,7 +41,8 @@ export function ProductCard({ producto }: ProductoCardProps) {
       producto.nombre,
       producto.description,
       producto.imageUrl,
-      producto.marca
+      producto.marca,
+      producto.codigo || ""
     );
     if (addedItem) {
       Swal.fire({

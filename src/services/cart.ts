@@ -34,8 +34,8 @@ export const agregarProductoAlCarrito = async (
   nombre: string,
   descripcion: string,
   foto: string,
-  marca:string,
-
+  marca: string,
+  codigo: string
 ): Promise<CarritoItem | null> => {
   // Primero, verificar si el producto ya está en el carrito activo del cliente
   const { data: existingItem, error: existingError } = await supabase
@@ -78,10 +78,11 @@ export const agregarProductoAlCarrito = async (
         producto_id: productoId,
         cantidad: cantidad,
         precio_unitario: precioUnitario,
-        nombre_prod:nombre,
-        descripcion:descripcion,
-        foto:foto,
-        marca:marca
+        nombre_prod: nombre,
+        descripcion: descripcion,
+        foto: foto,
+        marca: marca,
+        codigo: codigo,
       })
       .select()
       .single();
@@ -158,12 +159,12 @@ export const crearPedidoDesdeCarrito = async (
   const updates = itemsCarrito.map((item) => ({
     id: item.id,
     pedido_id: newPedido.id,
-    nombre_prod:item.producto?.nombre,
+    nombre_prod: item.producto?.nombre,
     cantidad: item.cantidad,
-    client_id: item.cliente_id, 
-    producto_id: item.producto_id, 
-    precio_unitario: item.precio_unitario, 
-    
+    client_id: item.cliente_id,
+    producto_id: item.producto_id,
+    precio_unitario: item.precio_unitario,
+    codigo: item.codigo,
   }));
 
   const { error: updateError } = await supabase
