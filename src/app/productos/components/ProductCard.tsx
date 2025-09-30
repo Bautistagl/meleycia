@@ -134,8 +134,10 @@ export function ProductCard({ producto }: ProductoCardProps) {
 
           <div className={styles.details}>
             <div className={styles.detailItem}>
-              <span className={styles.label}>Categoría:</span>
-              <span className={styles.value}>{producto.categoria}</span>
+              <span className={styles.label}>Codigo:</span>
+              <h2 className={styles.value}>
+                <strong> {producto.codigo}</strong>
+              </h2>
             </div>
 
             <div className={styles.detailItem}>
@@ -152,7 +154,8 @@ export function ProductCard({ producto }: ProductoCardProps) {
               </div>
               <div className={styles.offerPrice}>
                 <span className={styles.offerPriceText}>
-                  ${formatMoney(producto.precio_oferta)} {/* <-- Aplicado el formato */}
+                  ${formatMoney(producto.precio_oferta)}{" "}
+                  {/* <-- Aplicado el formato */}
                 </span>
                 <span className={styles.discountPercentage}>
                   {Math.round(
@@ -165,24 +168,26 @@ export function ProductCard({ producto }: ProductoCardProps) {
               </div>
             </div>
           ) : (
-            <div className={styles.price}>${formatMoney(producto.precio)}</div> /* <-- Aplicado el formato */
+            <div className={styles.price}>
+              ${formatMoney(producto.precio)}
+            </div> /* <-- Aplicado el formato */
           )}
 
-          <div className={styles.actionsContainer}>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={handleQuantityChange}
-              className={styles.quantityInput}
-            />
+          {/* <div className={styles.actionsContainer}>
             <button
               onClick={handleAddToCart}
               className={producto.stock ? styles.addButton : styles.noStock}
             >
               Agregar
             </button>
-          </div>
+          </div> */}
+          {/* <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={handleQuantityChange}
+              className={styles.quantityInput}
+            /> */}
         </div>
       </div>
     </div>

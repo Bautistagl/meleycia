@@ -43,6 +43,7 @@ const parseMoney = (value: string): number | null => {
 };
 
 export function ProductForm({ initialData }: ProductFormProps) {
+
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     category: initialData?.category || "",
@@ -52,7 +53,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     marca: initialData?.marca || "",
     precio_oferta: initialData?.precio_oferta || null,
     imageUrl: initialData?.imageUrl || "",
-    destacado: initialData?.destacado || false,
+    destacado: initialData?.destacado,
     codigo: initialData?.codigo || "",
   });
 

@@ -16,7 +16,10 @@
 .summaryContent {
   padding: 1.5rem;
 }
-
+.summaryContent p{
+  color: rgba(0, 0, 0, 0.527);
+  font-size: 0.8rem;
+}
 .summaryRow {
   display: flex;
   justify-content: space-between;

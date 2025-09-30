@@ -16,13 +16,18 @@
 }
 
 .logoContainer img {
-  height: 60px; /* Adjust logo height for better scaling */
+  height: 90px; /* Adjust logo height for better scaling */
   width: auto; /* Maintain aspect ratio */
 }
 
 .cartIcon {
   display: flex;
   margin: auto 10px; /* Keep existing margin */
+  
+}
+.cartIcon2 {
+  display: flex;
+  margin-left: -20px;
   
 }
 
@@ -44,6 +49,7 @@
   color: white;
   font-weight: 500;
   transition: color 0.3s ease;
+  font-size: 1.3rem;
   white-space: nowrap; /* Prevent links from wrapping */
 }
 

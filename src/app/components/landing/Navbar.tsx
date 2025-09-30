@@ -62,7 +62,7 @@ const Navbar = () => {
     <nav className={styles.navbar}>
       <div className={styles.logoContainer}>
         <Link href="/">
-          <Image src="/logoMele.png" alt="" height={100} width={240} />
+          <Image src="/logo2.jpg" alt="" height={230} width={440} />
         </Link>
       </div>
       <div className={`${styles.navLinks} ${isOpen ? styles.open : ""}`}>
@@ -73,7 +73,6 @@ const Navbar = () => {
         ) : (
           ""
         )}
-
         <Link
           target="_blank"
           href="https://wa.me/+5491138824301"
@@ -85,21 +84,21 @@ const Navbar = () => {
           Productos
         </Link>
         <Link href="/pedido" className={styles.navLink}>
-          Pedido
+          Carrito
         </Link>
-      </div>{" "}
+        <Link href="/pedido">
+          <Image
+            src="/cartIcon.png"
+            alt="Shopping Cart"
+            width={30}
+            height={30}
+            className={styles.cartIcon2}
+          />
+        </Link>
+      </div>
       {user ? (
         <div style={{ display: "flex" }}>
           {" "}
-          <Link href="/pedido">
-            <Image
-              src="/carrito.png"
-              alt="Shopping Cart"
-              width={30}
-              height={30}
-              className={styles.cartIcon}
-            />{" "}
-          </Link>{" "}
           <button className={styles.ctabutton3} onClick={handleLogout}>
             Cerrar Sesión
           </button>{" "}

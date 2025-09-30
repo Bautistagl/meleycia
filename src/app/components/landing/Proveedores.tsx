@@ -6,16 +6,21 @@ import Image from 'next/image'
 const supplierData = [
   { id: 1, name: "Supplier 1", logo: "/LogoArcor.png" },
   { id: 2, name: "Supplier 2", logo: "/LogoEnergizer.png" },
-  { id: 3, name: "Supplier 3", logo: "/LogoMarlboro.png" },
+  { id: 3, name: "Supplier 3", logo: "/massalinLogo.jpg" },
   { id: 4, name: "Supplier 4", logo: "/LogoRayo.png" },
-  { id: 5, name: "Supplier 5", logo: "/LogoEveready.png" },
+  { id: 5, name: "Supplier 5", logo: "/LogoEver.webp" },
   { id: 6, name: "Supplier 6", logo: "/LogoLumilagro.png" },
   { id: 7, name: "Supplier 7", logo: "/LogoMagiclick.png" },
   { id: 8, name: "Supplier 8", logo: "/LogoGuaymallen.avif" },
   { id: 9, name: "Supplier 9", logo: "/LogoJorgito.png" },
-  { id: 10, name: "Supplier 10", logo: "/LogoUnipox.png" },
+  { id: 10, name: "Supplier 10", logo: "/LogoPoxipol2.webp" },
   { id: 11, name: "Supplier 11", logo: "/LogoSc.png" },
   { id: 12, name: "Supplier 12", logo: "/LogoFelfort.png" },
+  { id: 13, name: "Supplier 13", logo: "/LogoMonde.jpg" },
+  { id: 14, name: "Supplier 14", logo: "/LogoFerrero.png" },
+  { id: 15, name: "Supplier 15", logo: "/LogoLion.png" },
+  { id: 16, name: "Supplier 16", logo: "/LogoPrime.jpg" },
+  { id: 17, name: "Supplier 17", logo: "/LogoDon.png" },
 ];
 
 const Suppliers: React.FC = () => {

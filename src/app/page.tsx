@@ -15,7 +15,7 @@ export default function Home() {
   const customBanners = [
     {
       id: "1",
-      src: "/energizer_banner.jpg",
+      src: "/bannerBien.webp",
       alt: "Oferta especial en baterías Energizer",
       title: "50% OFF Baterías",
       subtitle: "Energizer - Oferta por tiempo limitado",
@@ -24,7 +24,7 @@ export default function Home() {
     },
     {
       id: "2",
-      src: "/energizer_banner.jpg",
+      src: "/bannerBien.webp",
       alt: "Promoción productos de limpieza",
       title: "Productos de Limpieza",
       subtitle: "2x1 en productos seleccionados de marcas premium",
@@ -33,7 +33,7 @@ export default function Home() {
     },
     {
       id: "3",
-      src: "/energizer_banner.jpg",
+      src: "/bannerBien.webp",
       alt: "Descuentos en herramientas profesionales",
       title: "Herramientas Profesionales",
       subtitle: "Hasta 30% de descuento en toda la línea",

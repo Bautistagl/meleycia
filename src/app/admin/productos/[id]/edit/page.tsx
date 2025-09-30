@@ -29,6 +29,7 @@ export default async function EditProductPage({
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Editar Productos</h1>
+
       <ProductForm
         initialData={{
           id: product.id,
@@ -40,7 +41,7 @@ export default async function EditProductPage({
           marca: product.marca,
           precio_oferta: product.precio_oferta,
           imageUrl: product.imageUrl,
-          destacado: product.descatado,
+          destacado: product.destacado,
           codigo: product.codigo,
         }}
       />
