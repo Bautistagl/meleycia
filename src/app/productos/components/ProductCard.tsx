@@ -1,10 +1,10 @@
 import { Producto } from "@/types";
 import styles from "./ProductCard.module.css";
-import useAuth from "@/hooks/useAuth";
-import { agregarProductoAlCarrito } from "@/services/cart";
+// import useAuth from "@/hooks/useAuth";
+// import { agregarProductoAlCarrito } from "@/services/cart";
+// import Swal from "sweetalert2";
 import { useState } from "react";
 import Link from "next/link";
-import Swal from "sweetalert2";
 
 interface ProductoCardProps {
   producto: Producto;
@@ -22,55 +22,55 @@ const formatMoney = (value: number | null): string => {
 };
 
 export function ProductCard({ producto }: ProductoCardProps) {
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  // const [quantity, setQuantity] = useState(1);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [quantity, setQuantity] = useState(1);
 
-  const handleAddToCart = async () => {
-    if (!user?.id) {
-      setShowLoginModal(true);
-      return;
-    }
-    const clienteId = user.id;
- 
-    const addedItem = await agregarProductoAlCarrito(
-      clienteId,
-      producto.id,
-      quantity,
-      producto.precio,
-      producto.nombre,
-      producto.description,
-      producto.imageUrl,
-      producto.marca,
-      producto.codigo || ""
-    );
-    if (addedItem) {
-      Swal.fire({
-        position: "bottom-right",
-        icon: "success",
-        title: "Producto añadido al pedido",
-        showConfirmButton: false,
-        timer: 1000,
-        customClass: {
-          popup: "swal-horizontal-layout",
-          icon: "swal-small-icon",
-          title: "swal-no-margin-title",
-        },
-      });
-    } else {
-      alert("Error al añadir producto al carrito.");
-    }
-  };
+  // const handleAddToCart = async () => {
+  //   if (!user?.id) {
+  //     setShowLoginModal(true);
+  //     return;
+  //   }
+  //   const clienteId = user.id;
 
-  const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(event.target.value, 10);
+  //   const addedItem = await agregarProductoAlCarrito(
+  //     clienteId,
+  //     producto.id,
+  //     quantity,
+  //     producto.precio,
+  //     producto.nombre,
+  //     producto.description,
+  //     producto.imageUrl,
+  //     producto.marca,
+  //     producto.codigo || ""
+  //   );
+  //   if (addedItem) {
+  //     Swal.fire({
+  //       position: "bottom-right",
+  //       icon: "success",
+  //       title: "Producto añadido al pedido",
+  //       showConfirmButton: false,
+  //       timer: 1000,
+  //       customClass: {
+  //         popup: "swal-horizontal-layout",
+  //         icon: "swal-small-icon",
+  //         title: "swal-no-margin-title",
+  //       },
+  //     });
+  //   } else {
+  //     alert("Error al añadir producto al carrito.");
+  //   }
+  // };
 
-    if (value >= 1) {
-      setQuantity(value);
-    } else {
-      setQuantity(1);
-    }
-  };
+  // const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = parseInt(event.target.value, 10);
+
+  //   if (value >= 1) {
+  //     setQuantity(value);
+  //   } else {
+  //     setQuantity(1);
+  //   }
+  // };
 
   return (
     <div>

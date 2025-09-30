@@ -10,17 +10,15 @@ interface CartSummaryProps {
   loading:boolean
 }
 
-export default function CartSummary({ loading, items, onCheckout }: CartSummaryProps) {
+export default function CartSummary({ items }: CartSummaryProps) {
   const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.producto?.precio * item.cantidad, 0)
-  }, [items])
+    return items.reduce(
+      (sum, item) => sum + item.producto?.precio * item.cantidad,
+      0
+    );
+  }, [items]);
 
-
-
-
-
-
-  const total = subtotal 
+  const total = subtotal;
 
   return (
     <div className={styles.summary}>
