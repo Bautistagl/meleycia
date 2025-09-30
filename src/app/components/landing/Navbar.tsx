@@ -62,7 +62,7 @@ const Navbar = () => {
     <nav className={styles.navbar}>
       <div className={styles.logoContainer}>
         <Link href="/">
-          <Image src="/logo2.jpg" alt="" height={230} width={440} />
+          <Image src="/logo2.JPG" alt="" height={230} width={440} />
         </Link>
       </div>
       <div className={`${styles.navLinks} ${isOpen ? styles.open : ""}`}>
