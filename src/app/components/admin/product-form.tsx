@@ -53,7 +53,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     marca: initialData?.marca || "",
     precio_oferta: initialData?.precio_oferta || null,
     imageUrl: initialData?.imageUrl || "",
-    destacado: initialData?.destacado,
+    destacado: initialData?.destacado || false,
     codigo: initialData?.codigo || "",
   });
 
