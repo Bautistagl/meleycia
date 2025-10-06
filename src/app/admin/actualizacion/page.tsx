@@ -1,25 +1,24 @@
-'use client'
-import React, { useState } from 'react';
-import Papa from 'papaparse';
-import styles from './actualizacion.module.css'
-import Image from 'next/image';
+"use client";
+import React, { useState } from "react";
+// import Papa from 'papaparse'; // ¡Ya no es necesario!
+import styles from "./actualizacion.module.css";
+import Image from "next/image";
 
+/* // La interfaz CsvProductRow ya no es necesaria 
 interface CsvProductRow {
-  nombre: string;
-  precio: string; // Se lee como string del CSV, luego se convierte a número
-  // Otros campos si fueran necesarios para validación, pero solo usaremos nombre y precio_nuevo
+  nombre: string;
+  precio: string; 
 }
+*/
 
 const ActualizarProductos: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [message, setMessage] = useState<string>('');
+  const [message, setMessage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
- 
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setFile(event.target.files[0]);
-      setMessage('');
+      setMessage("");
     } else {
       setFile(null);
     }
@@ -28,67 +27,62 @@ const ActualizarProductos: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!file) {
-      setMessage('Por favor, selecciona un archivo CSV.');
+      setMessage("Por favor, selecciona un archivo CSV.");
       return;
     }
 
     setLoading(true);
-    setMessage('Procesando archivo...');
+    setMessage("Leyendo archivo...");
+    try {
+      // CAMBIO CLAVE: Leer el contenido del archivo como texto plano
+      const csvContent = await file.text();
+      setMessage("Enviando datos al servidor para procesamiento..."); // Enviar el texto plano del CSV directamente al Route Handler
 
-    Papa.parse<CsvProductRow>(file, {
-      header: true, // Asume que la primera fila son los encabezados
-      skipEmptyLines: true,
-      complete: async (results) => {
-        const productsToUpdate = results.data.map(row => ({
-          nombre: row.nombre,
-          precio_nuevo: parseFloat(row.precio) // Convertir el precio a número
-        })).filter(p => !isNaN(p.precio_nuevo)); // Filtrar filas con precio inválido
+      const response = await fetch("/actualizar-prods", {
+        method: "POST",
+        headers: {
+          // CAMBIO CLAVE: Usamos 'text/plain' para el contenido del CSV
+          "Content-Type": "text/plain",
+        }, // CAMBIO CLAVE: Enviamos el contenido raw del archivo
+        body: csvContent,
+      });
 
-        if (productsToUpdate.length === 0) {
-          setMessage('No se encontraron productos válidos para actualizar en el CSV.');
-          setLoading(false);
-          return;
+      const data = await response.json();
+
+      if (response.ok) {
+        // Si hay errores parciales, mostramos el mensaje general y un log
+        if (data.errors && data.errors.length > 0) {
+          setMessage(
+            data.message + " (Ver errores en la consola del navegador)"
+          );
+          console.error("Errores de actualización parcial:", data.errors);
+        } else {
+          setMessage(data.message);
         }
-
-        try {
-          const response = await fetch('/actualizar-prods', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ products: productsToUpdate }),
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            setMessage(data.message);
-          } else {
-            setMessage(`Error al actualizar productos: ${data.error || 'Error desconocido'}`);
-          }
-        } catch (error) {
-            if (error instanceof Error) {
-              setMessage(
-                `Error en la solicitud: ${error.message || "Error de red"}`
-              );
-            } 
-        } finally {
-          setLoading(false);
-        }
-      },
-      error: (error) => {
-        setMessage(`Error al parsear el CSV: ${error.message}`);
-        setLoading(false);
+      } else {
+        setMessage(
+          `Error al actualizar productos: ${data.error || "Error desconocido"}`
+        );
       }
-    });
+    } catch (error) {
+      if (error instanceof Error) {
+        setMessage(`Error en la solicitud: ${error.message || "Error de red"}`);
+      } else {
+        setMessage("Ocurrió un error inesperado al procesar el archivo.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Actualizar Productos por CSV</h1>
-      
+            <h1 className={styles.title}>Actualizar Productos por CSV</h1>     
+           {" "}
       <form className={styles.form} onSubmit={handleSubmit}>
+               {" "}
         <div className={styles.fileInputWrapper}>
+                   {" "}
           <input
             className={styles.fileInput}
             type="file"
@@ -96,50 +90,53 @@ const ActualizarProductos: React.FC = () => {
             onChange={handleFileChange}
             aria-label="Seleccionar archivo CSV"
           />
+                 {" "}
         </div>
-        
-        <button 
+                       {" "}
+        <button
           className={styles.submitButton}
-          type="submit" 
+          type="submit"
           disabled={!file || loading}
-          aria-label={loading ? 'Actualizando productos' : 'Subir y actualizar productos'}
+          aria-label={
+            loading ? "Actualizando productos" : "Subir y actualizar productos"
+          }
         >
-          {loading ? 'Actualizando...' : 'Subir y Actualizar'}
+                    {loading ? "Actualizando..." : "Subir y Actualizar"}       {" "}
         </button>
+             {" "}
       </form>
-
+           {" "}
       {message && (
-        <div className={`${styles.message} `}>
-          {message}
-        </div>
+        <div className={`${styles.message} `}>          {message}        </div>
       )}
-
+           {" "}
       <div className={styles.instructions}>
+               {" "}
         <p className={styles.instructionText}>
-          El archivo CSV debe contener las columnas <strong>nombre </strong> y <strong>precio </strong>(ambos en minuscula).
+                    El archivo CSV será procesado por el servidor para extraer
+          el código de producto (primera columna) y el precio (última columna).
+                 {" "}
         </p>
-         <p className={styles.instructionText}>
-          Es obligatorio que la columna <strong>nombre </strong> este primera y <strong>precio </strong> segunda
+               {" "}
+        <p className={styles.instructionText}>
+                    La estructura de línea esperada es similar a:{" "}
+          <strong>Código, Descripción, ..., Precio</strong>.        {" "}
         </p>
-         <p className={styles.instructionText}>
-          Es obligatorio que las columnas <strong>nombre </strong> y <strong>precio </strong> se encuentren en la primera fila
+               {" "}
+        <p className={styles.instructionText}>
+                    Para obtener el archivo csv deben entrar a la lista en
+          excel, tocar archivo, tocar descargar y elegir la opción **Valores
+          separados por coma (.csv)**.        {" "}
         </p>
-         <p className={styles.instructionText}>
-          Para obtener el archivo csv deben entrar a la lista en excel, tocar archivo, tocar descargar y elegir la opcion Valores separados por coma (.csv) .
-        </p>
-        
-        
-        <p className={styles.exampleTitle}>Ejemplo de lista de excel:</p>
-        <Image alt='' src='/ejemplo_csv.png' height={180} width={350}/>
-        <p className={styles.exampleTitle}>Ejemplo de CSV:</p>
+                       {" "}
+        <p className={styles.exampleTitle}>Ejemplo de línea válida:</p>       {" "}
         <div className={styles.codeBlock}>
-          <code>
-            nombre,precio<br/>
-            Producto A,120.50<br/>
-            Producto B,25.00
-          </code>
+                    <code>            9809, AA X 2,48,1851.48           </code> 
+               {" "}
         </div>
+             {" "}
       </div>
+         {" "}
     </div>
   );
 };

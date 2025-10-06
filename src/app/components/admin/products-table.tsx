@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./products-table.module.css";
 import { Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +12,14 @@ import { Filters } from "@/app/productos/components/Filters";
 import { Pagination } from "@/app/productos/components/Pagination";
 
 const ITEMS_PER_PAGE = 7;
+// Columna para ordenar por el más reciente (ID o fecha de creación)
+const ORDER_BY_COLUMN = "id";
+
+// Definición de tipos para Marcas y Categorías
+interface FilterOption {
+  id: string | number;
+  nombre: string;
+}
 
 // Función auxiliar para formatear un número a formato de moneda (ej: 2.343,33)
 const formatMoney = (value: number | null): string => {
@@ -26,77 +34,119 @@ const formatMoney = (value: number | null): string => {
 
 export function ProductsTable() {
   const [products, setProducts] = useState<Producto[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Producto[]>([]);
+  const [brands, setBrands] = useState<
+    { id: string | number; marca: string }[]
+  >([]);
+  const [categories, setCategories] = useState<
+    { id: string | number; nombre: string }[]
+  >([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     category: "",
     brand: "",
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get unique categories and brands for filters
-  const categories = [...new Set(products.map((product) => product.categoria))];
-  const brands = [...new Set(products.map((product) => product.marca))];
-
-  // Fetch all products once on mount
+  // --- 1. Fetch de Marcas y Categorías (Solo los nombres para la lista de filtros) ---
   useEffect(() => {
-    const fetchProductos = async () => {
-      const { data, error } = await supabase.from("productos").select("*");
+    const fetchBrands = async () => {
+      const { data, error } = await supabase.from("marcas").select("id, marca");
       if (error) {
-        console.error("Error fetching productos:", error.message);
+        console.error("Error fetching brands:", error.message);
         return;
       }
-
-      setProducts(data);
-      setFilteredProducts(data);
+      // ¡CORRECCIÓN AQUÍ! Solo llamas a setBrands una vez con el array de objetos.
+      setBrands(data as { id: string | number; marca: string }[]);
     };
-    fetchProductos();
+
+    const fetchCategorias = async () => {
+      const { data, error } = await supabase
+        .from("categorias")
+        .select("id, nombre");
+      if (error) {
+        console.error("Error fetching categorias:", error.message);
+        return;
+      }
+      // ¡CORRECCIÓN AQUÍ! Solo llamas a setCategorias una vez con el array de objetos.
+      setCategories(data as { id: string | number; nombre: string }[]);
+    };
+
+    fetchCategorias();
+    fetchBrands();
   }, []);
 
-  // Filter products based on search term and filters
-  useEffect(() => {
-    let result = [...products];
+  // --- 2. Fetch de Productos (Paginación y Filtrado en Supabase) ---
+  const fetchProductos = useCallback(async () => {
+    setIsLoading(true);
 
+    const from = (currentPage - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    // Iniciar la consulta, solicitando el conteo exacto de filas
+    let query = supabase
+      .from("productos")
+      .select("*", { count: "exact" })
+      .order(ORDER_BY_COLUMN, { ascending: false });
+
+    // Aplicar filtros de texto (nombre y descripción) usando .or() e .ilike()
     if (searchTerm) {
-      result = result.filter(
-        (product) =>
-          (product.nombre ?? "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          (product.description ?? "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
+      // La sintaxis de PostgREST para OR es: .or('col1.ilike.%val%,col2.ilike.%val%')
+      query = query.or(
+        `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`
       );
     }
 
+    // Aplicar filtros de categoría
     if (filters.category) {
-      result = result.filter(
-        (product) => product.categoria === filters.category
-      );
+      query = query.eq("categoria", filters.category);
     }
 
+    // Aplicar filtros de marca
     if (filters.brand) {
-      result = result.filter((product) => product.marca === filters.brand);
+      query = query.eq("marca", filters.brand);
     }
 
-    setFilteredProducts(result);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, filters, products]);
+    // Aplicar la paginación (rango) y ejecutar
+    const { data, error, count } = await query.range(from, to);
 
-  // Pagination logic
-  const indexOfLastProduct = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstProduct = indexOfLastProduct - ITEMS_PER_PAGE;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
+    if (error) {
+      console.error("Error fetching productos:", error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    setProducts(data || []);
+    setTotalProducts(count || 0);
+    setIsLoading(false);
+  }, [currentPage, searchTerm, filters]); // Dependencias: la consulta cambia con estos estados
+
+  // Ejecuta la función de carga cuando cambia la página, la búsqueda o los filtros
+  useEffect(() => {
+    fetchProductos();
+  }, [fetchProductos]);
+
+  // Resetear la página a 1 cuando la búsqueda o los filtros cambian
+  // NOTA: Esto debe ejecutarse antes de que fetchProductos use el nuevo searchTerm/filters
+  useEffect(() => {
+    // Solo resetea si el cambio no es solo en la página
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchProductos(); // Forzar la recarga si ya estamos en la página 1
+    }
+  }, [searchTerm, filters]);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
   return (
     <div className={styles.container}>
       <div className={styles.filters}>
         <div className={styles.search}>
+          {/* El componente Search ahora cambia el estado searchTerm, que dispara la consulta */}
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </div>
         <Filters
@@ -120,39 +170,59 @@ export function ProductsTable() {
             </tr>
           </thead>
           <tbody>
-            {currentProducts.map((product) => (
-              <tr key={product.id}>
-                <td>{product.nombre}</td>
-                <td>{product.categoria}</td>
-                <td>{product.marca}</td>
-                <td>${formatMoney(product.precio)}</td>
-                <td>{product.codigo}</td>
-                <td>
-                  <div className={styles.actions}>
-                    <Link
-                      href={`/admin/productos/${product.id}/edit`}
-                      className={styles.editButton}
-                    >
-                      <Edit size={16} />
-                    </Link>
-                    <DeleteConfirmDialog id={product.id} name={product.nombre}>
-                      <button className={styles.deleteButton}>
-                        <Trash2 size={16} />
-                      </button>
-                    </DeleteConfirmDialog>
-                  </div>
+            {isLoading && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center" }}>
+                  Cargando productos... 🔄
                 </td>
               </tr>
-            ))}
+            )}
+            {!isLoading && products.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center" }}>
+                  No se encontraron productos que coincidan con los filtros.
+                </td>
+              </tr>
+            )}
+            {!isLoading &&
+              products.map((product) => (
+                <tr key={product.id}>
+                  <td>{product.nombre}</td>
+                  <td>{product.categoria}</td>
+                  <td>{product.marca}</td>
+                  <td>${formatMoney(product.precio)}</td>
+                  <td>{product.codigo}</td>
+                  <td>
+                    <div className={styles.actions}>
+                      {/* Botón de Editar reincorporado */}
+                      <Link
+                        href={`/admin/productos/${product.id}/edit`}
+                        className={styles.editButton}
+                      >
+                        <Edit size={16} />
+                      </Link>
+                      {/* Botón de Eliminar reincorporado */}
+                      <DeleteConfirmDialog
+                        id={product.id}
+                        name={product.nombre}
+                      >
+                        <button className={styles.deleteButton}>
+                          <Trash2 size={16} />
+                        </button>
+                      </DeleteConfirmDialog>
+                    </div>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
 
       <div className={styles.pagination}>
-        {filteredProducts.length > ITEMS_PER_PAGE && (
+        {totalPages > 1 && (
           <Pagination
             productsPerPage={ITEMS_PER_PAGE}
-            totalProducts={filteredProducts.length}
+            totalProducts={totalProducts}
             currentPage={currentPage}
             paginate={paginate}
           />

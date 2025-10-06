@@ -2,46 +2,96 @@
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
+/**
+ * Función para limpiar y parsear las líneas del CSV.
+ * @param csvContent El contenido completo del archivo CSV como string.
+ * @returns Un array de objetos con { codigo, precio_nuevo }.
+ */
+function parseAndFilterCSV(csvContent: string): { codigo: string; precio_nuevo: number }[] {
+  const lines = csvContent.split('\r\n').filter(line => line.trim() !== ''); // Dividir y limpiar líneas vacías
+
+  const productsToUpdate: { codigo: string; precio_nuevo: number }[] = [];
+  const regex = /^(\d+),\s*[^,]+,\s*\d+,\s*(\d+(\.\d+)?)$/; // Regex para capturar COD y PRECIO
+
+  // La estructura buscada es: COD,DESCRIPCION,BL X BULTO,$ X BLISTER
+  for (const line of lines) {
+    const parts = line.split(',').map(part => part.trim());
+
+    // 1. Verificar si la línea tiene al menos 4 columnas (COD, DESCRIPCION, BULTO, PRECIO)
+    if (parts.length >= 4) {
+      const codigo = parts[0];
+      const descripcion = parts[1];
+      const precioStr = parts[parts.length - 1]; // Asumimos que el precio es la última columna
+
+      // 2. Comprobar que el código sea un número (o una cadena que represente un código)
+      //    y que el precio sea convertible a un número válido.
+      const isCodigoValid = !!codigo && codigo.match(/^\d+$/); // Solo dígitos para el código
+      const precio_nuevo = parseFloat(precioStr);
+      const isPrecioValid = !isNaN(precio_nuevo) && precio_nuevo > 0;
+
+      // 3. Opcional: Filtramos líneas de encabezado o que sean muy cortas
+      const isHeaderLike = isNaN(parseInt(codigo)) && descripcion.length < 5;
+
+      if (isCodigoValid && isPrecioValid && !isHeaderLike) {
+        productsToUpdate.push({
+          codigo: codigo,
+          precio_nuevo: precio_nuevo,
+        });
+      }
+    }
+  }
+
+  return productsToUpdate;
+}
+
 
 export async function POST(req: Request) {
   try {
-    const { products } = await req.json();
+    // Asumimos que el cliente envía el contenido del CSV como texto plano en el body
+    const csvContent = await req.text();
 
-    if (!products || !Array.isArray(products) || products.length === 0) {
+    if (!csvContent) {
       return NextResponse.json(
-        { error: "Datos de productos inválidos o vacíos." },
+        { error: "Contenido del archivo CSV vacío o no proporcionado." },
         { status: 400 }
       );
+    }
+
+    // 1. Limpiar y parsear el CSV para obtener solo los productos válidos
+    const productsToUpdate = parseAndFilterCSV(csvContent);
+
+    if (productsToUpdate.length === 0) {
+        return NextResponse.json(
+            { message: "No se encontraron productos válidos para actualizar en el CSV." },
+            { status: 200 }
+        );
     }
 
     let updatedCount = 0;
     let errorCount = 0;
     const errors: string[] = [];
 
-    for (const product of products) {
-      const { nombre, precio_nuevo } = product;
-
-      if (!nombre || typeof precio_nuevo !== "number" || isNaN(precio_nuevo)) {
-        errors.push(
-          `Fila inválida: nombre '${nombre}', precio_nuevo '${precio_nuevo}'`
-        );
-        errorCount++;
-        continue;
-      }
-
+    // 2. Recorrer los productos limpios y realizar las actualizaciones
+    for (const product of productsToUpdate) {
+      const { codigo, precio_nuevo } = product;
+      
+      // La columna en la base de datos debe ser la que contenga el código de producto,
+      // y la columna a actualizar es 'precio'.
       const { error } = await supabase
         .from("productos")
         .update({ precio: precio_nuevo })
-        .eq("nombre", nombre);
+        // CAMBIO CLAVE: Usamos 'codigo' para la coincidencia en lugar de 'nombre'
+        .eq("codigo", codigo); 
 
       if (error) {
-        errors.push(`Error al actualizar '${nombre}': ${error.message}`);
+        errors.push(`Error al actualizar código '${codigo}': ${error.message}`);
         errorCount++;
       } else {
         updatedCount++;
       }
     }
 
+    // 3. Manejar la respuesta
     if (errors.length > 0) {
       return NextResponse.json(
         {
@@ -49,7 +99,7 @@ export async function POST(req: Request) {
           errors: errors,
         },
         { status: 200 }
-      ); // Aunque haya errores parciales, la operación general fue un 200
+      ); 
     } else {
       return NextResponse.json(
         { message: `Se actualizaron ${updatedCount} productos exitosamente.` },
@@ -57,12 +107,9 @@ export async function POST(req: Request) {
       );
     }
   } catch (error: unknown) {
-    // Explicitly define as unknown or just 'catch (error)'
     console.error("Error en el Route Handler:", error);
 
     let errorMessage = "Error desconocido";
-
-    // Perform type narrowing to safely access 'message'
     if (error instanceof Error) {
       errorMessage = error.message;
     } else if (
@@ -70,11 +117,8 @@ export async function POST(req: Request) {
       error !== null &&
       "message" in error
     ) {
-      // This handles cases where 'error' might be an object with a 'message' property
-      // but not necessarily an instance of the Error class (e.g., custom errors or some third-party library errors).
       errorMessage = (error as { message: string }).message;
     } else if (typeof error === "string") {
-      // In case the error is a plain string
       errorMessage = error;
     }
 
@@ -89,7 +133,3 @@ export async function POST(req: Request) {
 export async function GET() {
   return NextResponse.json({ message: 'GET method not allowed for this endpoint.' }, { status: 405 });
 }
-
-// Puedes añadir otros métodos como PUT, DELETE si los necesitas
-// export async function PUT(req: Request) { ... }
-// export async function DELETE(req: Request) { ... }

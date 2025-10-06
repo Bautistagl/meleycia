@@ -43,7 +43,6 @@ const parseMoney = (value: string): number | null => {
 };
 
 export function ProductForm({ initialData }: ProductFormProps) {
-
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     category: initialData?.category || "",
@@ -57,8 +56,12 @@ export function ProductForm({ initialData }: ProductFormProps) {
     codigo: initialData?.codigo || "",
   });
 
-  const [brands, setBrands] = useState<string[]>([]);
-  const [categorias, setCategorias] = useState<string[]>([]);
+  const [brands, setBrands] = useState<
+    { id: string | number; marca: string }[]
+  >([]);
+  const [categorias, setCategorias] = useState<
+    { id: string | number; nombre: string }[]
+  >([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialData?.imageUrl || null
@@ -81,29 +84,30 @@ export function ProductForm({ initialData }: ProductFormProps) {
   // Obtener marcas y categorías desde Supabase al montar el componente
   useEffect(() => {
     const fetchBrands = async () => {
-      const { data, error } = await supabase.from("marcas").select("marca");
+      const { data, error } = await supabase.from("marcas").select("id, marca");
       if (error) {
         console.error("Error fetching brands:", error.message);
         return;
       }
-      setBrands(data.map((b) => b.marca));
+      // ¡CORRECCIÓN AQUÍ! Solo llamas a setBrands una vez con el array de objetos.
+      setBrands(data as { id: string | number; marca: string }[]);
     };
 
     const fetchCategorias = async () => {
       const { data, error } = await supabase
         .from("categorias")
-        .select("nombre");
+        .select("id, nombre");
       if (error) {
         console.error("Error fetching categorias:", error.message);
         return;
       }
-      setCategorias(data.map((b) => b.nombre));
+      // ¡CORRECCIÓN AQUÍ! Solo llamas a setCategorias una vez con el array de objetos.
+      setCategorias(data as { id: string | number; nombre: string }[]);
     };
 
     fetchCategorias();
     fetchBrands();
   }, []);
-
   // Maneja el cambio en el input de tipo file
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -189,20 +193,23 @@ export function ProductForm({ initialData }: ProductFormProps) {
         })
         .eq("id", initialData.id);
     } else {
-      response = await supabase.from("productos").insert([
-        {
-          nombre: name,
-          categoria: category,
-          precio: price,
-          stock: stock,
-          descripcion: description,
-          marca: marca,
-          precio_oferta: precio_oferta,
-          imageUrl: finalImageUrl,
-          destacado: destacado,
-          codigo: codigo,
-        },
-      ]);
+      response = await supabase
+        .from("productos")
+        .insert([
+          {
+            nombre: name,
+            categoria: category,
+            precio: price,
+            stock: stock,
+            descripcion: description,
+            marca: marca,
+            precio_oferta: precio_oferta,
+            imageUrl: finalImageUrl,
+            destacado: destacado,
+            codigo: codigo,
+          },
+        ])
+        .select();
     }
 
     const { error } = response;
@@ -215,7 +222,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       });
       return;
     }
-
+    console.log(response, "esto es repos");
     Swal.fire({
       title: initialData?.id ? "Producto Actualizado" : "Producto Creado",
       icon: "success",
@@ -273,11 +280,16 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <option value="" disabled>
                 Seleccionar Categoria
               </option>
-              {categorias.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+              {categorias.map(
+                (
+                  category // Usar el nuevo estado de datos
+                ) => (
+                  <option key={category.id} value={category.nombre}>
+                    {" "}
+                    {category.nombre}
+                  </option>
+                )
+              )}
             </select>
           </div>
           <div className={styles.formGroup}>
@@ -295,11 +307,16 @@ export function ProductForm({ initialData }: ProductFormProps) {
               <option value="" disabled>
                 Seleccionar Marca
               </option>
-              {brands.map((brand) => (
-                <option key={brand} value={brand}>
-                  {brand}
-                </option>
-              ))}
+              {brands.map(
+                (
+                  brand // Usar el nuevo estado de datos
+                ) => (
+                  <option key={brand.id} value={brand.marca}>
+                    {" "}
+                    {brand.marca}
+                  </option>
+                )
+              )}
             </select>
           </div>
           <div className={styles.formGroup}>
