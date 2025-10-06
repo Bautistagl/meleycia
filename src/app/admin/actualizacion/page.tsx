@@ -1,15 +1,9 @@
 "use client";
 import React, { useState } from "react";
-// import Papa from 'papaparse'; // ¡Ya no es necesario!
 import styles from "./actualizacion.module.css";
-import Image from "next/image";
 
-/* // La interfaz CsvProductRow ya no es necesaria 
-interface CsvProductRow {
-  nombre: string;
-  precio: string; 
-}
-*/
+
+
 
 const ActualizarProductos: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);

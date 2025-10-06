@@ -8,14 +8,13 @@ import { NextResponse } from 'next/server';
  * @returns Un array de objetos con { codigo, precio_nuevo }.
  */
 function parseAndFilterCSV(csvContent: string): { codigo: string; precio_nuevo: number }[] {
-  const lines = csvContent.split('\r\n').filter(line => line.trim() !== ''); // Dividir y limpiar líneas vacías
+  const lines = csvContent.split("\r\n").filter((line) => line.trim() !== ""); // Dividir y limpiar líneas vacías
 
   const productsToUpdate: { codigo: string; precio_nuevo: number }[] = [];
-  const regex = /^(\d+),\s*[^,]+,\s*\d+,\s*(\d+(\.\d+)?)$/; // Regex para capturar COD y PRECIO
 
   // La estructura buscada es: COD,DESCRIPCION,BL X BULTO,$ X BLISTER
   for (const line of lines) {
-    const parts = line.split(',').map(part => part.trim());
+    const parts = line.split(",").map((part) => part.trim());
 
     // 1. Verificar si la línea tiene al menos 4 columnas (COD, DESCRIPCION, BULTO, PRECIO)
     if (parts.length >= 4) {

@@ -3,12 +3,8 @@
 import type { ChangeEvent } from "react"
 import styles from "./Filters.module.css"
 
-// Definición de tipos para las nuevas estructuras
-interface Option {
-  id: string | number
-  nombre: string // Usado para categorías
-  marca?: string // Usado para marcas
-}
+
+
 
 interface FiltersProps {
   // Las props ahora esperan el nuevo formato de array de objetos

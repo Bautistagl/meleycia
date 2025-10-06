@@ -12,14 +12,10 @@ import { Filters } from "@/app/productos/components/Filters";
 import { Pagination } from "@/app/productos/components/Pagination";
 
 const ITEMS_PER_PAGE = 7;
-// Columna para ordenar por el más reciente (ID o fecha de creación)
 const ORDER_BY_COLUMN = "id";
 
-// Definición de tipos para Marcas y Categorías
-interface FilterOption {
-  id: string | number;
-  nombre: string;
-}
+
+
 
 // Función auxiliar para formatear un número a formato de moneda (ej: 2.343,33)
 const formatMoney = (value: number | null): string => {
