@@ -310,7 +310,113 @@
   background-color: #bbb;
 }
 
+/*
+  ======================================================
+  1. Contenedor principal del toggle y la información
+  ======================================================
+*/
+.stockToggleContainer {
+  display: flex; /* Alinea los elementos (info y switch) en fila */
+  align-items: center; /* Centra verticalmente ambos lados */
+  justify-content: space-between; /* Empuja la info a la izquierda y el switch a la derecha */
+  padding: 8px 0; /* Espacio vertical dentro del contenedor, si es necesario */
+  border-top: 1px solid #eee; /* Separador sutil del resto del contenido de la tarjeta */
+  margin-top: 10px;
+}
 
+/*
+  ======================================================
+  2. Bloque de información de stock (Etiqueta + Estado)
+  ======================================================
+*/
+.stockInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacio entre el label "Stock" y el estado "Con stock" */
+  font-size: 14px;
+}
+
+.stockLabel {
+  font-weight: 600; /* Hace que "Stock:" resalte un poco */
+  color: #555;
+}
+
+/* Estilos para el texto de estado (Con stock / Sin stock) */
+.stockStatusActive {
+  font-weight: 700;
+  color: #28a745; /* Verde para 'Con stock' */
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #e6ffec; /* Fondo suave */
+}
+
+.stockStatusInactive {
+  font-weight: 700;
+  color: #dc3545; /* Rojo para 'Sin stock' */
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #fcebeb; /* Fondo suave */
+}
+
+
+/*
+  ======================================================
+  3. Estilos del Toggle Switch
+  ======================================================
+*/
+
+/* Contenedor del switch (etiqueta) */
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 44px; /* Ancho total del toggle */
+  height: 24px; /* Alto total del toggle */
+}
+
+/* Oculta el checkbox nativo */
+.toggleInput {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* El "slider" visual (el interruptor) */
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc; /* Color cuando está DESACTIVADO */
+  transition: 0.4s;
+  border-radius: 24px; /* Lo hace redondo */
+}
+
+/* El círculo/pomo que se desliza */
+.toggleSlider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px; /* Espacio inicial a la izquierda */
+  bottom: 3px; /* Espacio inicial abajo */
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%; /* Lo hace un círculo */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos cuando el checkbox está ACTIVADO */
+.toggleInput:checked + .toggleSlider {
+  background-color: #28a745; /* Color Verde cuando está ACTIVADO */
+}
+
+/* Posiciona el círculo/pomo a la derecha cuando está ACTIVADO */
+.toggleInput:checked + .toggleSlider::before {
+  /* Mueve el círculo: Ancho total (44px) - PADDING (2 * 3px) - Ancho del círculo (18px) = 20px */
+  transform: translateX(20px);
+}
 /* --- Responsive Adjustments --- */
 
 /* Tablets and small laptops ( pantallas de hasta 1199px de ancho) */

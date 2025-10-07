@@ -19,6 +19,7 @@ export default function ProductsPage() {
     category: "",
     brand: "",
   });
+  const [admin, setAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0); // Total de productos que cumplen los filtros
   const productsPerPage = 12;
@@ -121,6 +122,12 @@ export default function ProductsPage() {
     fetchCategorias();
     fetchBrands();
   }, []);
+  useEffect(() => {
+    const mailCliente = localStorage.getItem("meleyciamail");
+    if (mailCliente == "meleycia@admin.com") {
+      setAdmin(true);
+    }
+  }, []);
 
   // Nota: Ya no necesitamos 'indexOfLastProduct', 'indexOfFirstProduct' ni 'currentProducts'
   // porque el array 'products' ya contiene los elementos correctos para la página.
@@ -156,7 +163,7 @@ export default function ProductsPage() {
           <div className={styles.productsGrid}>
             {/* Usar 'products' directamente, que son los 12 traídos por Supabase */}
             {products.map((product) => (
-              <ProductCard key={product.id} producto={product} />
+              <ProductCard key={product.id} admin={admin} producto={product} />
             ))}
           </div>
         )}

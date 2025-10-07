@@ -1,13 +1,18 @@
-import { Producto } from "@/types";
+"use client";
+
+import type { Producto } from "@/types";
 import styles from "./ProductCard.module.css";
 // import useAuth from "@/hooks/useAuth";
 // import { agregarProductoAlCarrito } from "@/services/cart";
 // import Swal from "sweetalert2";
 import { useState } from "react";
 import Link from "next/link";
+import { updateProductStock } from "@/app/services/product";
 
 interface ProductoCardProps {
   producto: Producto;
+  onStockChange?: (productId: string | number, newStock: boolean) => void;
+  admin: boolean;
 }
 
 // Función auxiliar para formatear un número a formato de moneda (ej: 2.343,33)
@@ -21,57 +26,59 @@ const formatMoney = (value: number | null): string => {
   });
 };
 
-export function ProductCard({ producto }: ProductoCardProps) {
+export function ProductCard({
+  producto,
+  onStockChange,
+  admin,
+}: ProductoCardProps) {
   // const { user } = useAuth();
   // const [quantity, setQuantity] = useState(1);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [stockEnabled, setStockEnabled] = useState(producto.stock);
 
-  // const handleAddToCart = async () => {
-  //   if (!user?.id) {
-  //     setShowLoginModal(true);
-  //     return;
-  //   }
-  //   const clienteId = user.id;
+  const [isLoading, setIsLoading] = useState(false);
 
-  //   const addedItem = await agregarProductoAlCarrito(
-  //     clienteId,
-  //     producto.id,
-  //     quantity,
-  //     producto.precio,
-  //     producto.nombre,
-  //     producto.description,
-  //     producto.imageUrl,
-  //     producto.marca,
-  //     producto.codigo || ""
-  //   );
-  //   if (addedItem) {
-  //     Swal.fire({
-  //       position: "bottom-right",
-  //       icon: "success",
-  //       title: "Producto añadido al pedido",
-  //       showConfirmButton: false,
-  //       timer: 1000,
-  //       customClass: {
-  //         popup: "swal-horizontal-layout",
-  //         icon: "swal-small-icon",
-  //         title: "swal-no-margin-title",
-  //       },
-  //     });
-  //   } else {
-  //     alert("Error al añadir producto al carrito.");
-  //   }
-  // };
+  const handleStockToggle = async () => {
+    // Cambiado a asíncrono
+    const newStock = !stockEnabled;
 
-  // const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const value = parseInt(event.target.value, 10);
+    if (isLoading) return; // Evitar múltiples clicks
 
-  //   if (value >= 1) {
-  //     setQuantity(value);
-  //   } else {
-  //     setQuantity(1);
-  //   }
-  // };
+    setIsLoading(true); // Iniciar carga
 
+    try {
+      // 1. Llamar al servicio de actualización
+      const updatedProduct = await updateProductStock(
+        producto.codigo,
+        newStock
+      );
+
+      if (updatedProduct) {
+        // 2. Si la actualización en BD fue exitosa
+        setStockEnabled(newStock); // Actualiza el estado local
+        // Opcional: Mostrar una notificación de éxito (si usas Swal)
+        // Swal.fire("Éxito", `Stock de ${producto.nombre} actualizado a ${newStock ? 'CON STOCK' : 'SIN STOCK'}`, "success");
+
+        // 3. Notificar al componente padre si es necesario (opcional)
+        if (onStockChange) {
+          onStockChange(producto.codigo, newStock);
+        }
+      } else {
+        // La BD no se actualizó, revertir el estado (o no actualizarlo nunca)
+        // Opcional: Mostrar una notificación de error
+        // Swal.fire("Error", "No se pudo actualizar el stock en la base de datos.", "error");
+        console.error(
+          "Fallo al actualizar el producto, revisar logs de updateProductStock."
+        );
+      }
+    } catch (error) {
+      // Manejar errores de red o del servicio
+      // Swal.fire("Error", "Ocurrió un error de red al intentar actualizar.", "error");
+      console.error("Error en handleStockToggle:", error);
+    } finally {
+      setIsLoading(false); // Finalizar carga, independientemente del resultado
+    }
+  };
   return (
     <div>
       {showLoginModal && (
@@ -99,24 +106,49 @@ export function ProductCard({ producto }: ProductoCardProps) {
         </div>
       )}
       <div className={styles.card}>
-        <div className={styles.stock}>
-          <span
-            className={
-              producto.stock === true ? styles.inStock : styles.outOfStock
-            }
-          >
-            {producto.stock ? "Con stock" : "Sin stock"}
-          </span>
-        </div>
-        {producto.precio_oferta && producto.precio_oferta < producto.precio && (
-          <div className={styles.offerBadge}>
-            <span className={styles.offerText}>¡OFERTA!</span>
+        <div className={styles.stockToggleContainer}>
+          <div className={styles.stockInfo}>
+            <span className={styles.stockLabel}>Stock:</span>
+            <span
+              className={
+                stockEnabled
+                  ? styles.stockStatusActive
+                  : styles.stockStatusInactive
+              }
+            >
+              {stockEnabled ? "Con stock" : "Sin stock"}
+            </span>
           </div>
-        )}
+          {admin ? (
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={stockEnabled}
+                disabled={isLoading}
+                onChange={handleStockToggle}
+                className={styles.toggleInput}
+              />
+              {/* Opcional: Mostrar un spinner o indicador de carga */}
+              {isLoading ? (
+                <span className={styles.loadingIndicator}>🔄</span>
+              ) : (
+                <span className={styles.toggleSlider}></span>
+              )}
+            </label>
+          ) : (
+            ""
+          )}
+        </div>
+
+        {/* {producto.precio_oferta && producto.precio_oferta < producto.precio && (
+          <div className={styles.offerBadge}>
+            <span className={styles.offerText}>¡a!</span>
+          </div>
+        )} */}
         <div className={styles.imageContainer}>
           {producto.imageUrl ? (
             <img
-              src={producto.imageUrl}
+              src={producto.imageUrl || "/placeholder.svg"}
               alt={producto.nombre}
               className={styles.image}
             />
@@ -172,24 +204,74 @@ export function ProductCard({ producto }: ProductoCardProps) {
               ${formatMoney(producto.precio)}
             </div> /* <-- Aplicado el formato */
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          {/* <div className={styles.actionsContainer}>
+{
+  /* <div className={styles.actionsContainer}>
             <button
               onClick={handleAddToCart}
               className={producto.stock ? styles.addButton : styles.noStock}
             >
               Agregar
             </button>
-          </div> */}
-          {/* <input
+          </div> */
+}
+{
+  /* <input
               type="number"
               min="1"
               value={quantity}
               onChange={handleQuantityChange}
               className={styles.quantityInput}
-            /> */}
-        </div>
-      </div>
-    </div>
-  );
+            /> */
 }
+
+// const handleAddToCart = async () => {
+//   if (!user?.id) {
+//     setShowLoginModal(true);
+//     return;
+//   }
+//   const clienteId = user.id;
+
+//   const addedItem = await agregarProductoAlCarrito(
+//     clienteId,
+//     producto.id,
+//     quantity,
+//     producto.precio,
+//     producto.nombre,
+//     producto.description,
+//     producto.imageUrl,
+//     producto.marca,
+//     producto.codigo || ""
+//   );
+//   if (addedItem) {
+//     Swal.fire({
+//       position: "bottom-right",
+//       icon: "success",
+//       title: "Producto añadido al pedido",
+//       showConfirmButton: false,
+//       timer: 1000,
+//       customClass: {
+//         popup: "swal-horizontal-layout",
+//         icon: "swal-small-icon",
+//         title: "swal-no-margin-title",
+//       },
+//     });
+//   } else {
+//     alert("Error al añadir producto al carrito.");
+//   }
+// };
+
+// const handleQuantityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//   const value = parseInt(event.target.value, 10);
+
+//   if (value >= 1) {
+//     setQuantity(value);
+//   } else {
+//     setQuantity(1);
+//   }
+// };
