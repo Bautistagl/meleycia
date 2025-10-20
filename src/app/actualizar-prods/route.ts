@@ -61,7 +61,7 @@ function parseAndFilterCSV(
     if (parts.length < 2) continue;
 
     const codigo = parts[0]; // La primera columna siempre es el código
-    let precioStr = parts[parts.length - 1]; // La última columna siempre es el precio
+    const precioStr = parts[parts.length - 1]; // La última columna siempre es el precio
 
     // --- 1. VALIDACIÓN DEL CÓDIGO ---
     // El código debe estar presente. Si está vacío, la línea no se procesa.
@@ -87,7 +87,7 @@ function parseAndFilterCSV(
     if (cleanPrecioStr.includes(",")) {
       // Si contiene coma, asumimos formato regional (ej: 1.000,50)
       // 1. Eliminar puntos (separador de miles)
-      let tempStr = cleanPrecioStr.replace(/\./g, "");
+      const tempStr = cleanPrecioStr.replace(/\./g, "");
       // 2. Reemplazar la coma por punto (separador decimal)
       cleanPrecioStr = tempStr.replace(/,/g, ".");
     }
