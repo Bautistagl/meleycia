@@ -23,7 +23,7 @@ export default function ProductSection() {
           .eq("destacado", true)
           .order("created_at", { ascending: false })
           .limit(6);
-        console.log(data, "dsadsadas");
+
         if (!error && data) {
           const products = data.map((p) => ({
             id: p.id,

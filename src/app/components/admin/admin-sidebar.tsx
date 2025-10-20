@@ -31,6 +31,28 @@ export function AdminSidebar() {
             </li>
             <li>
               <Link
+                href="/admin/combos"
+                className={`${styles.navLink} ${
+                  isActive("/admin/combos") ? styles.active : ""
+                }`}
+              >
+                <Package size={20} />
+                <span>Nuevo Combo</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/listadoCombos"
+                className={`${styles.navLink} ${
+                  isActive("/admin/listadoCombos") ? styles.active : ""
+                }`}
+              >
+                <Package size={20} />
+                <span>Combos</span>
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/admin/actualizacion"
                 className={`${styles.navLink} ${
                   isActive("/admin/actualizacion") ? styles.active : ""

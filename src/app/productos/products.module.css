@@ -5,13 +5,56 @@
 }
 
 .header {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  font-family: Arial, sans-serif;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 20px; /* Espacio para separar de la Search/Filters */
 }
 
-.header h1 {
+.headerButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 20px;
+  margin: 0;
+  outline: none;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.headerButton h1 {
   font-size: 24px;
   font-weight: bold;
-  color: #333;
+  margin: 0;
+  line-height: 1.2;
+  /* 💡 CLAVE: Definir el color gris (inactivo) por defecto en el H1 */
+  color: #777; 
+  transition: color 0.3s ease;
+}
+
+/* Estilo para el botón activo */
+.active h1 {
+  /* 💡 CLAVE: Aplicar color negro (activo) directamente al H1 en el estado activo */
+  color: #000; 
+}
+
+/* Línea roja de estado activo */
+.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #ff0000;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Efecto hover (opcional) */
+.headerButton:hover h1 {
+  color: #333; /* Gris oscuro al pasar el ratón */
 }
 
 .toolsContainer {

@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search } from "./components/Search";
 import { Filters } from "./components/Filters";
+// ProductCard puede necesitar un prop para distinguir si es producto o combo,
+// o si la estructura de Combo es diferente, necesitarás un ComboCard.
+// Asumiré que ProductCard puede manejar el tipo Combo o crearé un tipo genérico para el mapeo.
 import { ProductCard } from "./components/ProductCard";
 import { Pagination } from "./components/Pagination";
 import styles from "./products.module.css";
@@ -10,9 +13,32 @@ import Navbar from "../components/landing/Navbar";
 import { supabase } from "@/lib/supabase";
 import { Producto } from "@/types";
 
+// 1. Definir un tipo para Combo (ajusta esto a tu estructura real de la base de datos)
+// Asumiré que Combo es similar a Producto para usar el mismo ProductCard por ahora.
+// Si son muy distintos, deberás crear un <ComboCard />.
+type Combo = {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  // Otros campos específicos de Combo
+  [key: string]: any;
+};
+
+// 2. Definir un tipo genérico que pueda ser Producto o Combo para el mapeo
+// Esto solo si la tarjeta es muy genérica. Si no, usa el tipo específico.
+// Para simplificar, asumiremos que ProductCard manejará ambos o que Combo tiene los campos base necesarios.
+type DisplayItem = Producto | Combo;
+
+// 3. Nuevo estado para controlar la vista: 'productos' o 'combos'
+type CurrentView = "productos" | "combos";
+
 export default function ProductsPage() {
+  const [currentView, setCurrentView] = useState<CurrentView>("productos"); // Estado de la vista
+
   const [products, setProducts] = useState<Producto[]>([]);
-  // Se ha eliminado 'filteredProducts' ya que el filtrado y paginación se hace en Supabase.
+  const [combos, setCombos] = useState<Combo[]>([]); // Nuevo estado para combos
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
@@ -21,21 +47,41 @@ export default function ProductsPage() {
   });
   const [admin, setAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalProducts, setTotalProducts] = useState(0); // Total de productos que cumplen los filtros
+  
+  // Total de items que cumplen los filtros para la vista actual
+  const [totalItems, setTotalItems] = useState(0); 
+
   const productsPerPage = 12;
   const ORDER_BY_COLUMN = "id";
 
-  const fetchProductos = useCallback(async () => {
+  // Función para cambiar la vista (Productos/Combos)
+  const changeView = (view: CurrentView) => {
+    // Si la vista ya es la actual, no hacemos nada
+    if (view === currentView) return; 
+
+    // 🔴 Importante: Siempre volver a la página 1 y limpiar el total cuando se cambia de vista
+    setCurrentPage(1); 
+    setTotalItems(0); 
+    setSearchTerm(""); // Opcional: limpiar búsqueda
+    setFilters({ category: "", brand: "" }); // Opcional: limpiar filtros
+    setCurrentView(view);
+  };
+
+  // 4. Función de fetch unificada (para Productos y Combos)
+  const fetchData = useCallback(async (view: CurrentView) => {
     setIsLoading(true);
 
-    // Calcular el rango para Supabase (paginación en el servidor)
     const from = (currentPage - 1) * productsPerPage;
     const to = from + productsPerPage - 1;
 
-    // Iniciar la consulta, solicitando el conteo exacto de filas filtradas
+    // Determinar la tabla y las funciones de estado a usar
+    const isProductsView = view === "productos";
+    const tableName = isProductsView ? "productos" : "combos"; // <-- Usa el nombre correcto de tu tabla de combos
+    const setStateFunc = isProductsView ? setProducts : setCombos;
+
     let query = supabase
-      .from("productos")
-      .select("*", { count: "exact" }) // count: "exact" es clave
+      .from(tableName)
+      .select("*", { count: "exact" })
       .order(ORDER_BY_COLUMN, { ascending: false });
 
     // Aplicar filtros de texto (nombre y descripción)
@@ -44,53 +90,49 @@ export default function ProductsPage() {
         `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`
       );
     }
-
-    // Aplicar filtros de categoría
-    if (filters.category) {
-      query = query.eq("categoria", filters.category);
+    
+    // ⚠️ Nota: Los filtros de categoría/marca pueden no ser aplicables a Combos. 
+    // Considera limpiar o deshabilitar estos filtros si estás en la vista 'combos'.
+    if (isProductsView) {
+      if (filters.category) {
+        query = query.eq("categoria", filters.category);
+      }
+      if (filters.brand) {
+        query = query.eq("marca", filters.brand);
+      }
     }
-
-    // Aplicar filtros de marca
-    if (filters.brand) {
-      query = query.eq("marca", filters.brand);
-    }
-
-    // Aplicar la paginación (rango) y ejecutar
+    
     const { data, error, count } = await query.range(from, to);
 
     if (error) {
-      console.error("Error fetching productos:", error.message);
+      console.error(`Error fetching ${tableName}:`, error.message);
       setIsLoading(false);
       return;
     }
 
-    // 'data' contiene solo los 12 productos de la página actual
-    setProducts(data || []);
-    // 'count' contiene el total de productos que cumplen los filtros
-    setTotalProducts(count || 0);
+    if (isProductsView) {
+      setProducts(data as Producto[] || []);
+    } else {
+      setCombos(data as Combo[] || []);
+    }
+    setTotalItems(count || 0); // Actualiza el total de la vista actual
     setIsLoading(false);
-  }, [currentPage, searchTerm, filters]);
+  }, [currentPage, searchTerm, filters, currentView]); // 🔴 Agregamos currentView como dependencia
 
   useEffect(() => {
-    // Cuando cambian los filtros o la página, recargamos los datos del servidor
-    fetchProductos();
-  }, [fetchProductos]);
+    // Cuando cambian la vista, filtros, o la página, recargamos los datos
+    fetchData(currentView);
+  }, [fetchData]);
 
   useEffect(() => {
     // Si cambia el término de búsqueda o filtros, siempre volvemos a la página 1.
-    // Si ya estamos en la 1, 'fetchProductos' se llama por la dependencia 'fetchProductos'
-    // en el useEffect anterior.
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
   }, [searchTerm, filters]);
-
-  // Se eliminó el useEffect que realizaba el filtrado local.
-
-  // Change page
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-
-  // Get unique categories and brands for filters
+  
+  // Lógica de fetch de Marcas y Categorías (no se modifica, pero recuerda que solo aplican a Productos)
+  // ... (tu código para fetchBrands y fetchCategorias)
   const [brands, setBrands] = useState<
     { id: string | number; marca: string }[]
   >([]);
@@ -122,57 +164,85 @@ export default function ProductsPage() {
     fetchCategorias();
     fetchBrands();
   }, []);
+
   useEffect(() => {
     const mailCliente = localStorage.getItem("meleyciamail");
     if (mailCliente == "meleycia@admin.com") {
       setAdmin(true);
     }
   }, []);
+  
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Nota: Ya no necesitamos 'indexOfLastProduct', 'indexOfFirstProduct' ni 'currentProducts'
-  // porque el array 'products' ya contiene los elementos correctos para la página.
+  // Determinar los items a mostrar y la cantidad actual
+  const itemsToDisplay = currentView === "productos" ? products : combos;
+  const currentItemCount = itemsToDisplay.length;
 
   return (
     <div>
       <Navbar />
       <div className={styles.container}>
+        {/* 6. Modificación del Header para incluir botones clickeables */}
         <div className={styles.header}>
-          <h1>Productos</h1>
+          {/* Estilos sencillos para que se vea la diferencia, ajústalos con CSS */}
+          <button 
+            onClick={() => changeView("productos")} 
+            className={`${styles.headerButton} ${currentView === "productos" ? styles.active : ''}`}
+
+          >
+            <h1>Productos</h1>
+          </button>
+       
+          <button 
+            onClick={() => changeView("combos")} 
+            className={`${styles.headerButton} ${currentView === "combos" ? styles.active : ''}`}
+
+          >
+            <h1>Combos</h1>
+          </button>
         </div>
 
         <div className={styles.toolsContainer}>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <Filters
-            categories={categories}
-            brands={brands}
-            filters={filters}
-            setFilters={setFilters}
-          />
+          {/* ⚠️ Nota: Los filtros de categoría/marca sólo tienen sentido para 'productos' */}
+          {currentView === "productos" && (
+            <Filters
+              categories={categories}
+              brands={brands}
+              filters={filters}
+              setFilters={setFilters}
+            />
+          )}
         </div>
 
         {/* Mostrar información basada en los datos del servidor */}
         <div className={styles.resultsInfo}>
           <span>
-            Mostrando {products.length} de {totalProducts} productos
+            Mostrando {currentItemCount} de {totalItems} {currentView}
           </span>
         </div>
 
         {isLoading ? (
-          <p>Cargando productos...</p>
+          <p>Cargando {currentView}...</p>
         ) : (
           <div className={styles.productsGrid}>
-            {/* Usar 'products' directamente, que son los 12 traídos por Supabase */}
-            {products.map((product) => (
-              <ProductCard key={product.id} admin={admin} producto={product} />
-            ))}
+            {/* 7. Mapear 'itemsToDisplay' (que será products o combos) */}
+            {itemsToDisplay.length > 0 ? (
+                itemsToDisplay.map((item) => (
+                    // Asegúrate de que ProductCard pueda aceptar tanto Producto como Combo
+                    <ProductCard key={item.id} admin={admin} isCombo={currentView === 'combos'} producto={item as Producto} />
+                ))
+            ) : (
+                <p>No se encontraron {currentView} que coincidan con los criterios de búsqueda.</p>
+            )}
           </div>
         )}
 
-        {/* Usar 'totalProducts' (el conteo del servidor) para la paginación */}
-        {totalProducts > productsPerPage && (
+        {/* Usar 'totalItems' para la paginación */}
+        {totalItems > productsPerPage && (
           <Pagination
             productsPerPage={productsPerPage}
-            totalProducts={totalProducts} // Usamos el conteo total filtrado por el servidor
+            totalProducts={totalItems} // Usamos el conteo total filtrado
             currentPage={currentPage}
             paginate={paginate}
           />
@@ -181,3 +251,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+// Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css
