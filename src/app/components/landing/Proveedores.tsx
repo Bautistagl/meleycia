@@ -29,30 +29,36 @@ const Suppliers: React.FC = () => {
       {/* <h2 className={styles.title}>Nuestros proveedores</h2> */}
       <div className={styles.supplierGrid}>
         {supplierData.map((supplier) => (
-              <div key={supplier.id} className="card">
-              <div className="card-inner">
-                <div className="card-front">
-                <Image src={supplier.logo} alt={`logo`} height={100} width={140} className={styles.logo} />
-                </div>
-                <div className="card-back">
+          <div key={supplier.id} className="card">
+            <div className="card-inner">
+              <div className="card-front">
+                <Image
+                  src={supplier.logo}
+                  alt={`logo`}
+                  height={100}
+                  width={140}
+                  className={styles.logo}
+                />
+              </div>
+              <div className="card-back">
                 <ul id="category-toggle-list">
-	<li className="project-category web "><a href="#">Ver Productos</a></li>
-
-</ul>
-                </div>
+                  <li className="project-category web ">
+                    <a href="/productos">Ver Productos</a>
+                  </li>
+                </ul>
               </div>
             </div>
+          </div>
           // <div key={supplier.id} className={styles.supplierCard}>
           //   <div className={styles.logoContainer}>
           //   <Image src={supplier.logo} alt={`logo`} height={120} width={160} className={styles.logo} />
           //   </div>
-           
+
           // </div>
         ))}
       </div>
-
     </section>
-  )
+  );
 }
 
 export default Suppliers

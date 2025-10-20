@@ -4,7 +4,7 @@ export interface Producto {
   nombre: string;
   precio: number;
   stock: boolean;
-  description: string;
+  descripcion: string;
   categoria: string;
   marca: string;
   precio_oferta: number | null; // <-- Missing in your map
@@ -42,12 +42,12 @@ export interface Cliente {
   id: string;
   nombre: string;
   email: string;
-  telefono:number;
+  telefono: number;
 }
 export interface Brand {
   id?: string;
   name: string;
-  description: string;
+  descripcion: string;
   website?: string;
   logo?: File | null;
   country?: string;

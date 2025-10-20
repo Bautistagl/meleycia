@@ -31,7 +31,7 @@ export default function ProductSection() {
             categoria: p.categoria,
             precio: p.precio,
             stock: p.stock,
-            description: p.descripcion,
+            descripcion: p.descripcion,
             marca: p.marca,
             imageUrl: p.imageUrl,
             precio_oferta: p.precio_oferta,
@@ -80,7 +80,12 @@ export default function ProductSection() {
           </button>
           <div className="products-container" ref={productsContainerRef}>
             {recentProducts.map((product) => (
-              <ProductCard key={product.id} admin={admin} producto={product} />
+              <ProductCard
+                isCombo={false}
+                key={product.id}
+                admin={admin}
+                producto={product}
+              />
             ))}
           </div>
           <button onClick={scrollRight} className="carousel-button next">

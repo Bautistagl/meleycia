@@ -12,7 +12,7 @@ interface ComboFormProps {
     name?: string;
     price?: number;
     stock?: number;
-    description?: string;
+    descripcion?: string;
     imageUrl?: string;
   };
 }
@@ -42,16 +42,10 @@ export function ComboForm({ initialData }: ComboFormProps) {
     name: initialData?.name || "",
     price: initialData?.price || 0,
     stock: initialData?.stock || 1,
-    description: initialData?.description || "",
+    descripcion: initialData?.descripcion || "",
     imageUrl: initialData?.imageUrl || "",
   });
 
-  const [brands, setBrands] = useState<
-    { id: string | number; marca: string }[]
-  >([]);
-  const [categorias, setCategorias] = useState<
-    { id: string | number; nombre: string }[]
-  >([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialData?.imageUrl || null
@@ -68,32 +62,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
   }, [formData.price]);
 
   // Obtener marcas y categorías desde Supabase al montar el componente
-  useEffect(() => {
-    const fetchBrands = async () => {
-      const { data, error } = await supabase.from("marcas").select("id, marca");
-      if (error) {
-        console.error("Error fetching brands:", error.message);
-        return;
-      }
-      // ¡CORRECCIÓN AQUÍ! Solo llamas a setBrands una vez con el array de objetos.
-      setBrands(data as { id: string | number; marca: string }[]);
-    };
 
-    const fetchCategorias = async () => {
-      const { data, error } = await supabase
-        .from("categorias")
-        .select("id, nombre");
-      if (error) {
-        console.error("Error fetching categorias:", error.message);
-        return;
-      }
-      // ¡CORRECCIÓN AQUÍ! Solo llamas a setCategorias una vez con el array de objetos.
-      setCategorias(data as { id: string | number; nombre: string }[]);
-    };
-
-    fetchCategorias();
-    fetchBrands();
-  }, []);
   // Maneja el cambio en el input de tipo file
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -138,7 +107,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price, stock, description } = formData;
+    const { name, price, stock, descripcion } = formData;
 
     let finalImageUrl: string | null = null;
 
@@ -159,7 +128,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
           nombre: name,
           precio: price,
           stock: stock > 0, // Asegura que se guarde como booleano
-          descripcion: description,
+          descripcion: descripcion,
           imageUrl: finalImageUrl,
         })
         .eq("id", initialData.id);
@@ -171,7 +140,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
             nombre: name,
             precio: price,
             stock: stock,
-            descripcion: description,
+            descripcion: descripcion,
             imageUrl: finalImageUrl,
           },
         ])
@@ -199,7 +168,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
         name: "",
         price: 0,
         stock: 1,
-        description: "",
+        descripcion: "",
         imageUrl: "",
       });
       setImageFile(null);
@@ -225,8 +194,6 @@ export function ComboForm({ initialData }: ComboFormProps) {
               required
             />
           </div>
-
-
 
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
@@ -271,22 +238,21 @@ export function ComboForm({ initialData }: ComboFormProps) {
                 <option value="false">No Disponible</option>
               </select>
             </div>
-                      <div className={styles.formGroup}>
-            <label htmlFor="name" className={styles.label}>
-              Descripcion del producto
-            </label>
-            <textarea
-              id="name"
-              className={styles.input}
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              required
-            />
+            <div className={styles.formGroup}>
+              <label htmlFor="name" className={styles.label}>
+                Descripcion del producto
+              </label>
+              <textarea
+                id="name"
+                className={styles.input}
+                value={formData.descripcion}
+                onChange={(e) =>
+                  setFormData({ ...formData, descripcion: e.target.value })
+                }
+                required
+              />
+            </div>
           </div>
-          </div>
-
         </div>
 
         <div className={styles.formSection}>

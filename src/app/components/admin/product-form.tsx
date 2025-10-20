@@ -13,7 +13,7 @@ interface ProductFormProps {
     category?: string;
     price?: number;
     stock?: number;
-    description?: string;
+    descripcion?: string;
     marca?: string;
     precio_oferta?: number | null;
     imageUrl?: string;
@@ -48,7 +48,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
     category: initialData?.category || "",
     price: initialData?.price || 0,
     stock: initialData?.stock || 1,
-    description: initialData?.description || "",
+    descripcion: initialData?.descripcion || "",
     marca: initialData?.marca || "",
     precio_oferta: initialData?.precio_oferta || null,
     imageUrl: initialData?.imageUrl || "",
@@ -157,7 +157,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
       category,
       price,
       stock,
-      description,
+      descripcion,
       marca,
       precio_oferta,
       destacado,
@@ -184,7 +184,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           categoria: category,
           precio: price,
           stock: stock > 0, // Asegura que se guarde como booleano
-          descripcion: description,
+          descripcion: descripcion,
           marca: marca,
           precio_oferta: precio_oferta,
           imageUrl: finalImageUrl,
@@ -201,7 +201,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             categoria: category,
             precio: price,
             stock: stock,
-            descripcion: description,
+            descripcion: descripcion,
             marca: marca,
             precio_oferta: precio_oferta,
             imageUrl: finalImageUrl,
@@ -234,7 +234,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
         category: "",
         price: 0,
         stock: 1,
-        description: "",
+        descripcion: "",
         marca: "",
         precio_oferta: 0,
         imageUrl: "",
