@@ -26,7 +26,7 @@ export function RecentItems() {
           categoria: p.categoria,
           precio: p.precio,
           stock: p.stock,
-          description: p.descripcion,
+          descripcion: p.descripcion,
           marca: p.marca,
           imageUrl: p.imageUrl,
           precio_oferta: p.precio_oferta,
