@@ -13,9 +13,9 @@ interface RegisterFormData {
   repeatPassword: string;
   nombre: string;
   telefono: string;
+  direccion: string;
+  dni: string;
 }
-
-
 
 const RegisterForm: React.FC = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -24,6 +24,8 @@ const RegisterForm: React.FC = () => {
     repeatPassword: "",
     nombre: "",
     telefono: "",
+    direccion: "",
+    dni: "",
   });
   const router = useRouter();
   const [formErrors, setFormErrors] = useState<Partial<RegisterFormData>>({});
@@ -66,7 +68,7 @@ const RegisterForm: React.FC = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const { email, password, nombre, telefono } = formData;
+    const { email, password, nombre, telefono, direccion, dni } = formData;
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -91,6 +93,8 @@ const RegisterForm: React.FC = () => {
         email,
         nombre,
         telefono,
+        direccion,
+        dni,
       });
 
       if (insertError) {
@@ -155,6 +159,38 @@ const RegisterForm: React.FC = () => {
               onChange={(e) => handleInputChange("telefono", e.target.value)}
               className={styles.input}
               autoComplete="tel"
+            />
+            {formErrors.telefono && (
+              <span className={styles.fieldError}>{formErrors.telefono}</span>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <label htmlFor="telefono" className={styles.label}>
+              DNI
+            </label>
+            <input
+              type="tel"
+              id="dni"
+              value={formData.dni}
+              onChange={(e) => handleInputChange("dni", e.target.value)}
+              className={styles.input}
+              autoComplete="dni"
+            />
+            {formErrors.telefono && (
+              <span className={styles.fieldError}>{formErrors.telefono}</span>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <label htmlFor="telefono" className={styles.label}>
+              Dirección
+            </label>
+            <input
+              type="tel"
+              id="direccion"
+              value={formData.direccion}
+              onChange={(e) => handleInputChange("direccion", e.target.value)}
+              className={styles.input}
+              autoComplete="dir"
             />
             {formErrors.telefono && (
               <span className={styles.fieldError}>{formErrors.telefono}</span>

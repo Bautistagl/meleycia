@@ -4,13 +4,11 @@ import { NextResponse } from "next/server";
 /**
  * Función para limpiar y parsear las líneas del CSV de forma dinámica.
  *
- * Mejoras implementadas:
- * 1. La detección del inicio de datos se ha simplificado a la segunda línea
- * no vacía, ya que los CSV proporcionados tienen metadata/encabezados.
- * 2. Validación de la columna de precio más robusta:
- * - Limpia signos de moneda ($), comillas y cualquier texto adicional (e.g., "+ iva").
- * - Normaliza separadores regionales (coma a punto como decimal).
- * - **Solo acepta la línea si el valor final es un número válido y positivo.**
+ * MODIFICACIÓN CLAVE: Se ha cambiado la forma de parsear las líneas
+ * para manejar comas (,) dentro de valores entrecomillados (como los precios).
+ * Ahora se usa un Regex para dividir, lo que garantiza que el precio
+ * completo ("X.XXX,XX") se mantenga como una sola parte, incluso si
+ * contiene comas internas.
  *
  * @param csvContent El contenido completo del archivo CSV como string.
  * @returns Un array de objetos con { codigo, precio_nuevo }.
@@ -26,55 +24,54 @@ function parseAndFilterCSV(
   if (lines.length === 0) return [];
 
   // 2. Encontrar el índice donde comienzan los datos reales.
-  // Buscamos la primera línea que contenga al menos 2 columnas que no sean TODAS comas,
-  // y saltamos esa línea (asumiendo que es un encabezado/subencabezado).
+  // Basado en el CSV, los datos comienzan en la tercera línea no vacía (índice 2).
+  // La línea 0 es 'LUMILAGRO,,', la 1 es 'COD,DESCRIPCIÓN,$ SIN IVA'.
+  // Para ser más flexible, mantenemos la lógica de búsqueda de inicio, pero
+  // el CSV subido sugiere que el índice de inicio real está en la tercera línea (índice 2)
   let startIndex = 0;
   for (let i = 0; i < lines.length; i++) {
     const lineParts = lines[i].split(",").map((part) => part.trim());
 
-    // Una línea debe tener al menos 2 partes para considerarse una posible fila de datos/encabezado.
-    if (lineParts.length >= 2) {
-      // Si el primer elemento y el último tienen contenido, asumimos que es un encabezado
-      // o la primera fila de datos, y empezamos a procesar desde la siguiente (i + 1).
-      // En los CSV de ejemplo, la línea 1 es metadata, la 2/3 el encabezado.
-      // Un inicio más seguro es asumir que la primera fila no vacía es encabezado (startIndex=1).
-      // Sin embargo, para los CSV que tienen varias líneas de metadata, es mejor
-      // buscar la primera línea que parece un registro de datos (ej: código + precio)
-      // y empezar a validar desde esa línea, en lugar de saltarla.
-      // Modificamos la estrategia para incluir esta línea en la validación a continuación.
-      startIndex = i;
+    // Buscamos la primera línea que parece ser un encabezado de datos
+    // o el primer registro (con al menos 2 partes no vacías).
+    if (lineParts.length >= 2 && lineParts[0].length > 0) {
+      // Asumiendo que la línea después del encabezado/subencabezado es el inicio de los datos
+      startIndex = i + 1;
       break;
     }
   }
 
-  // Si no se encontró el inicio de los datos, devolvemos vacío.
-  if (startIndex === lines.length) return [];
+  // En el CSV 'LUMILAGRO - Sheet1.csv', los datos comienzan después de la línea 'COD,DESCRIPCIÓN,$ SIN IVA'
+  // por lo que el startIndex debería ser al menos 2. Si no se encontró un patrón, forzamos a la línea 2.
+  if (startIndex === 0) startIndex = 2; // Ajuste basado en la estructura del CSV
+  if (startIndex >= lines.length) return []; // Si no hay datos
 
   const dataLines = lines.slice(startIndex);
   const productsToUpdate: { codigo: string; precio_nuevo: number }[] = [];
 
-  for (const line of dataLines) {
-    // Dividir la línea por comas y limpiar espacios en blanco.
-    const parts = line.split(",").map((part) => part.trim());
+  // Expresión regular para dividir CSV:
+  // Divide por coma (,) SOLAMENTE si NO está dentro de comillas (").
+  const CSV_SPLIT_REGEX = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
 
-    // Requerimos al menos 2 columnas (Código y Precio)
+  for (const line of dataLines) {
+    // *** CAMBIO CLAVE AQUÍ: Usamos Regex para dividir por comas, ignorando las comas dentro de comillas. ***
+    const parts = line.split(CSV_SPLIT_REGEX).map((part) => part.trim());
+
+    // Requerimos al menos 2 columnas (Código y Precio). En este CSV, serán 3.
     if (parts.length < 2) continue;
 
     const codigo = parts[0]; // La primera columna siempre es el código
-    const precioStr = parts[parts.length - 1]; // La última columna siempre es el precio
+    // La columna de precio es la última, que ahora contendrá el valor completo entre comillas.
+    const precioStr = parts[parts.length - 1];
 
     // --- 1. VALIDACIÓN DEL CÓDIGO ---
-    // El código debe estar presente. Si está vacío, la línea no se procesa.
-    const isCodigoPresent = codigo.length > 0;
-    if (!isCodigoPresent) continue;
-
-    // Opcional: Limpiar comillas si la primera columna está entrecomillada
     const cleanCodigo = codigo.replace(/^"|"$/g, "").trim();
+    const isCodigoPresent = cleanCodigo.length > 0;
+    if (!isCodigoPresent) continue;
 
     // --- 2. LIMPIEZA Y VALIDACIÓN DEL PRECIO (Manejo de formatos regionales y ruido) ---
 
     // 2.1 Limpiar el string de precio de caracteres no numéricos *excepto* puntos y comas.
-    // Esto elimina "$", " + iva", letras, etc.
     let cleanPrecioStr = precioStr
       // Elimina cualquier texto no numérico/no separador al final o al inicio
       .replace(/[^\d.,]+$/g, "")
@@ -96,8 +93,6 @@ function parseAndFilterCSV(
     const precio_nuevo_raw = parseFloat(cleanPrecioStr);
 
     // Debe ser un número válido, no NaN y mayor que 0.
-    // Esto asegura que líneas como "$300.00 + iva" (que se convertiría a NaN después de limpiar el texto)
-    // o "PAPEL OCB PREMIUM (NEGRO)" (que es puro texto) sean saltadas.
     const isPrecioValid = !isNaN(precio_nuevo_raw) && precio_nuevo_raw > 0;
 
     // --- 3. INSERCIÓN FINAL ---
@@ -113,10 +108,10 @@ function parseAndFilterCSV(
   return productsToUpdate;
 }
 
-// Exportación del handler POST sin cambios
+// Exportación del handler POST y GET (sin cambios)
 export async function POST(req: Request) {
+  // ... (El resto del código del handler POST no necesita cambios)
   try {
-    // Asumimos que el cliente envía el contenido del CSV como texto plano en el body
     const csvContent = await req.text();
 
     if (!csvContent) {
