@@ -4,11 +4,10 @@ import { NextResponse } from "next/server";
 /**
  * Función para limpiar y parsear las líneas del CSV de forma dinámica.
  *
- * MODIFICACIÓN CLAVE: Se ha cambiado la forma de parsear las líneas
- * para manejar comas (,) dentro de valores entrecomillados (como los precios).
- * Ahora se usa un Regex para dividir, lo que garantiza que el precio
- * completo ("X.XXX,XX") se mantenga como una sola parte, incluso si
- * contiene comas internas.
+ * MODIFICACIÓN CLAVE: Se ha cambiado el delimitador de coma (,) a
+ * punto y coma (;) para la división de columnas. Se mantiene la lógica
+ * de Regex para manejar el caso de que el punto y coma pudiera aparecer
+ * dentro de un valor entrecomillado.
  *
  * @param csvContent El contenido completo del archivo CSV como string.
  * @returns Un array de objetos con { codigo, precio_nuevo }.
@@ -25,12 +24,10 @@ function parseAndFilterCSV(
 
   // 2. Encontrar el índice donde comienzan los datos reales.
   // Basado en el CSV, los datos comienzan en la tercera línea no vacía (índice 2).
-  // La línea 0 es 'LUMILAGRO,,', la 1 es 'COD,DESCRIPCIÓN,$ SIN IVA'.
-  // Para ser más flexible, mantenemos la lógica de búsqueda de inicio, pero
-  // el CSV subido sugiere que el índice de inicio real está en la tercera línea (índice 2)
   let startIndex = 0;
   for (let i = 0; i < lines.length; i++) {
-    const lineParts = lines[i].split(",").map((part) => part.trim());
+    // MODIFICACIÓN 1: Cambiar split(",") por split(";") para la detección de encabezado
+    const lineParts = lines[i].split(";").map((part) => part.trim()); 
 
     // Buscamos la primera línea que parece ser un encabezado de datos
     // o el primer registro (con al menos 2 partes no vacías).
@@ -41,27 +38,26 @@ function parseAndFilterCSV(
     }
   }
 
-  // En el CSV 'LUMILAGRO - Sheet1.csv', los datos comienzan después de la línea 'COD,DESCRIPCIÓN,$ SIN IVA'
-  // por lo que el startIndex debería ser al menos 2. Si no se encontró un patrón, forzamos a la línea 2.
-  if (startIndex === 0) startIndex = 2; // Ajuste basado en la estructura del CSV
+  // Ajuste basado en la estructura del CSV
+  if (startIndex === 0) startIndex = 2; 
   if (startIndex >= lines.length) return []; // Si no hay datos
 
   const dataLines = lines.slice(startIndex);
   const productsToUpdate: { codigo: string; precio_nuevo: number }[] = [];
 
-  // Expresión regular para dividir CSV:
-  // Divide por coma (,) SOLAMENTE si NO está dentro de comillas (").
-  const CSV_SPLIT_REGEX = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+  // MODIFICACIÓN 2: Expresión regular para dividir CSV por punto y coma.
+  // Divide por punto y coma (;) SOLAMENTE si NO está dentro de comillas (").
+  const CSV_SPLIT_REGEX = /;(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
 
   for (const line of dataLines) {
-    // *** CAMBIO CLAVE AQUÍ: Usamos Regex para dividir por comas, ignorando las comas dentro de comillas. ***
-    const parts = line.split(CSV_SPLIT_REGEX).map((part) => part.trim());
+    // MODIFICACIÓN 3: Usamos el nuevo Regex para dividir por punto y coma.
+    const parts = line.split(CSV_SPLIT_REGEX).map((part) => part.trim()); 
 
     // Requerimos al menos 2 columnas (Código y Precio). En este CSV, serán 3.
     if (parts.length < 2) continue;
 
     const codigo = parts[0]; // La primera columna siempre es el código
-    // La columna de precio es la última, que ahora contendrá el valor completo entre comillas.
+    // La columna de precio es la última.
     const precioStr = parts[parts.length - 1];
 
     // --- 1. VALIDACIÓN DEL CÓDIGO ---
@@ -108,9 +104,9 @@ function parseAndFilterCSV(
   return productsToUpdate;
 }
 
-// Exportación del handler POST y GET (sin cambios)
+// El resto del código del handler POST y GET no necesita cambios.
 export async function POST(req: Request) {
-  // ... (El resto del código del handler POST no necesita cambios)
+  // ... (código del handler POST)
   try {
     const csvContent = await req.text();
 
