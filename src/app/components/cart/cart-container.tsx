@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react"
 import useAuth from "@/hooks/useAuth"
+// Importar supabase
+import { supabase } from "@/lib/supabase"; 
 import {
   obtenerCarritoActivoCliente,
   actualizarCantidadProductoEnCarrito,
   eliminarProductoDeCarrito,
   crearPedidoDesdeCarrito,
-} from "@/services/cart" // Asegúrate de que esta ruta sea correcta para generarMensajeWhatsappCarrito
-import type { CarritoItem, Producto } from "@/types"; // <--- Importa Producto y Cliente también
+} from "@/services/cart"
+import type { CarritoItem, Producto } from "@/types";
 import CartItem from "./cart-item";
 import CartSummary from "./cart-summary";
 import EmptyCart from "./empty-cart";
@@ -16,15 +18,52 @@ import styles from "./cart.module.css";
 import { generarMensajeWhatsappCarrito } from "@/services/whatsapp";
 import Swal from "sweetalert2";
 
+// Definir una interfaz para los datos del cliente que necesitamos
+interface ClienteData {
+  nombre: string;
+  telefono_vendedor: number | null; // Cambiado a number o null basado en tu esquema
+}
+
 export default function CartContainer() {
   const { user } = useAuth();
   const [cartItems, setCartItems] = useState<CarritoItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); // Nuevo estado para errores
+  const [error, setError] = useState<string | null>(null);
+  // Nuevo estado para almacenar el teléfono del vendedor
+  const [vendedorTelefono, setVendedorTelefono] = useState<number | null>(null); 
+
+  // Función para obtener el cliente y su vendedor asignado
+  const obtenerDatosCliente = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('nombre, telefono_vendedor')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error("Error al obtener datos del cliente:", error);
+      // Establecer un teléfono de respaldo en caso de error
+      return { telefono_vendedor: 1133478376 }; 
+    }
+    
+    // Convertir el teléfono a número o null si es necesario
+    const telefono = data?.telefono_vendedor ? parseInt(data.telefono_vendedor.toString(), 10) : null;
+
+    return { 
+        nombre: data?.nombre || user?.email || "Estimado cliente",
+        telefono_vendedor: telefono
+    };
+  }, [user?.email]);
 
   const refetchCart = useCallback(async () => {
     if (user?.id) {
       setLoading(true);
+      
+      // Obtener datos del cliente y vendedor
+      const clienteData = await obtenerDatosCliente(user.id);
+      setVendedorTelefono(clienteData.telefono_vendedor);
+
+      // Obtener items del carrito
       const items = await obtenerCarritoActivoCliente(user.id);
 
       if (items) {
@@ -35,7 +74,7 @@ export default function CartContainer() {
       }
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, obtenerDatosCliente]); // Dependencia a obtenerDatosCliente
 
   useEffect(() => {
     refetchCart();
@@ -46,13 +85,13 @@ export default function CartContainer() {
       handleRemoveItem(itemId);
       return;
     }
-    setLoading(true); // O un estado de carga más granular para la actualización
+    setLoading(true); 
     const updatedItem = await actualizarCantidadProductoEnCarrito(
       itemId,
       newQuantity
     );
     if (updatedItem) {
-      refetchCart(); // Actualiza el estado del carrito
+      refetchCart();
     } else {
       alert("Error al actualizar cantidad.");
     }
@@ -60,7 +99,7 @@ export default function CartContainer() {
   };
 
   const handleRemoveItem = async (itemId: number) => {
-    setLoading(true); // O un estado de carga más granular para la eliminación
+    setLoading(true); 
     const removed = await eliminarProductoDeCarrito(itemId);
     if (removed) {
       refetchCart();
@@ -70,7 +109,7 @@ export default function CartContainer() {
     setLoading(false);
   };
 
-  // ** NUEVA FUNCIÓN PARA ENVIAR POR WHATSAPP **
+  // ** FUNCIÓN MODIFICADA PARA ENVIAR POR WHATSAPP **
   const handleEnviarPedidoWhatsapp = async () => {
     if (!user?.id || cartItems.length === 0) {
       alert(
@@ -82,11 +121,7 @@ export default function CartContainer() {
     setLoading(true);
     setError(null);
 
-    // 1. Crear el pedido en la base de datos (opcional, si quieres que se registre antes del WhatsApp)
-    // Si no quieres que se cree el pedido en DB hasta que confirmen por WhatsApp, puedes comentar esta línea
-
-    // 2. Obtener la versión más actualizada y "rica" del carrito para el mensaje de WhatsApp
-    // Esto es CRÍTICO para que `generarMensajeWhatsappCarrito` tenga acceso al `item.producto`
+    // 1. Obtener la versión más actualizada y "rica" del carrito
     const carritoParaWhatsapp = await obtenerCarritoActivoCliente(user.id);
 
     if (!carritoParaWhatsapp || carritoParaWhatsapp.length === 0) {
@@ -97,49 +132,57 @@ export default function CartContainer() {
       return;
     }
 
-    // Asegúrate de que cada item del carrito tenga la propiedad `producto` debido al join
     const carritoConDetalleProducto = carritoParaWhatsapp.filter(
       (item) => item.producto
     ) as (CarritoItem & { producto: Producto })[];
 
-    const nombreCliente =
-      user.user_metadata?.full_name || user?.email || "Estimado cliente"; // Obtén el nombre del cliente
-    // 3. Generar el mensaje de WhatsApp
-    const mensajeCodificado = generarMensajeWhatsappCarrito(
-      carritoConDetalleProducto,
-      nombreCliente
-    );
+    // 2. Obtener el nombre del cliente y el teléfono del vendedor
+    const clienteData = await obtenerDatosCliente(user.id);
+    const nombreCliente = clienteData.nombre;
+    const telefonoVendedor = clienteData.telefono_vendedor;
+    
+    // ** Teléfono por defecto si falla la obtención (ej. TELEMARKETING) **
+    const targetPhone = telefonoVendedor || 1133478376;
+    
+// 3. Generar el mensaje de WhatsApp (Mensaje en formato de texto plano)
+const mensajePlano = generarMensajeWhatsappCarrito(
+  carritoConDetalleProducto,
+  nombreCliente
+);
 
-    // 4. Construir la URL de WhatsApp
-    const urlWhatsapp = `https://wa.me/+5491138824301/?text=${mensajeCodificado}`;
+// 4. Codificar el mensaje para URL (¡LA CLAVE!)
+const mensajeCodificado = encodeURIComponent(mensajePlano);
 
-    // 5. Redirigir al usuario a WhatsApp
-    window.open(urlWhatsapp, "_blank");
+// 5. Construir la URL de WhatsApp con el teléfono dinámico del vendedor
+const urlWhatsapp = `https://wa.me/+549${targetPhone}/?text=${mensajeCodificado}`;
 
-    setLoading(false);
+// 6. Redirigir al usuario a WhatsApp
+window.open(urlWhatsapp, "_blank");
+
+
     Swal.fire({
       title: "Pedido enviado por whatsapp",
       icon: "success",
     });
 
-    const nuevoPedido = await crearPedidoDesdeCarrito(user.id, cartItems);
+    // 6. Crear el pedido en la base de datos DESPUÉS de redirigir (opcional, ajusta tu flujo)
+    const nuevoPedido = await crearPedidoDesdeCarrito(user.id, carritoParaWhatsapp);
 
     if (!nuevoPedido) {
-      setError(
-        "Hubo un error al crear el pedido en la base de datos. No se pudo generar el mensaje de WhatsApp."
-      );
-      setLoading(false);
-      return;
+      // Mostrar un error de DB pero permitir que continúe el flujo de WhatsApp
+      console.error("Hubo un error al crear el pedido en la base de datos.");
     }
+    
     refetchCart();
+    setLoading(false);
   };
 
   if (loading) {
     return <div className={styles.loading}>Cargando carrito...</div>;
   }
 
+  // ... (Resto de las validaciones y el return JSX no se modifican) ...
   if (error) {
-    // Muestra el error si existe
     return (
       <div className={styles.errorContainer}>
         <p>{error}</p>
@@ -191,7 +234,7 @@ export default function CartContainer() {
           ))}
         </div>
 
-        {/* Aquí puedes agregar el botón para WhatsApp en tu CartSummary o directamente aquí */}
+        {/* Aquí se llama a la función modificada */}
         <CartSummary
           loading={loading}
           items={cartItems}

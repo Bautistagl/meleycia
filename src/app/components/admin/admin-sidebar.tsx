@@ -81,7 +81,18 @@ export function AdminSidebar() {
                 }`}
               >
                 <Layers size={20} />
-                <span>Nueva Categoria</span>
+                <span>Nueva Categoria </span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/clientes"
+                className={`${styles.navLink} ${
+                  isActive("/admin/clientes") ? styles.active : ""
+                }`}
+              >
+                <Tag size={20} />
+                <span>Clientes</span>
               </Link>
             </li>
           </ul>

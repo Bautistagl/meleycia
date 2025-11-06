@@ -10,7 +10,11 @@ interface CartSummaryProps {
   loading:boolean
 }
 
-export default function CartSummary({ items }: CartSummaryProps) {
+export default function CartSummary({
+  items,
+  onCheckout,
+  loading,
+}: CartSummaryProps) {
   const subtotal = useMemo(() => {
     return items.reduce(
       (sum, item) => sum + item.producto?.precio * item.cantidad,
@@ -31,13 +35,13 @@ export default function CartSummary({ items }: CartSummaryProps) {
           Los precios no incluyen IVA y pueden ser modificados sin previo aviso.
         </p>
         <div className={styles.actions}>
-          {/* <button
+          <button
             className={styles.checkoutBtn}
             onClick={onCheckout}
             disabled={loading || items.length === 0}
           >
             Realizar Pedido por WhatsApp
-          </button> */}
+          </button>
 
           <a href="/productos" className={styles.continueBtn}>
             CONTINUAR PEDIDO

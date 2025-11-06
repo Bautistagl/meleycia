@@ -2,10 +2,10 @@
 
 import type { Producto } from "@/types";
 import styles from "./ProductCard.module.css";
-// import useAuth from "@/hooks/useAuth";
-// import { agregarProductoAlCarrito } from "@/services/cart";
-// import Swal from "sweetalert2";
-import { useState } from "react";
+import useAuth from "@/hooks/useAuth"; // Habilitado
+import { agregarProductoAlCarrito } from "@/services/cart";
+import Swal from "sweetalert2";
+import { useState, useCallback } from "react"; // Añadido useCallback
 import Link from "next/link";
 import { updateProductStock } from "@/app/services/product";
 
@@ -33,12 +33,12 @@ export function ProductCard({
   admin,
   isCombo,
 }: ProductoCardProps) {
-  // const { user } = useAuth();
-  // const [quantity, setQuantity] = useState(1);
+  const { user } = useAuth(); // Habilitado
+  const [quantity, setQuantity] = useState(1); // Habilitado
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [stockEnabled, setStockEnabled] = useState(producto.stock);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Se usará para el carrito también
 
   const handleStockToggle = async () => {
     // Cambiado a asíncrono
@@ -58,29 +58,101 @@ export function ProductCard({
       if (updatedProduct) {
         // 2. Si la actualización en BD fue exitosa
         setStockEnabled(newStock); // Actualiza el estado local
-        // Opcional: Mostrar una notificación de éxito (si usas Swal)
-        // Swal.fire("Éxito", `Stock de ${producto.nombre} actualizado a ${newStock ? 'CON STOCK' : 'SIN STOCK'}`, "success");
 
         // 3. Notificar al componente padre si es necesario (opcional)
         if (onStockChange) {
           onStockChange(producto.codigo, newStock);
         }
       } else {
-        // La BD no se actualizó, revertir el estado (o no actualizarlo nunca)
-        // Opcional: Mostrar una notificación de error
-        // Swal.fire("Error", "No se pudo actualizar el stock en la base de datos.", "error");
         console.error(
           "Fallo al actualizar el producto, revisar logs de updateProductStock."
         );
       }
     } catch (error) {
-      // Manejar errores de red o del servicio
-      // Swal.fire("Error", "Ocurrió un error de red al intentar actualizar.", "error");
       console.error("Error en handleStockToggle:", error);
     } finally {
       setIsLoading(false); // Finalizar carga, independientemente del resultado
     }
   };
+
+  // --- LÓGICA AÑADIDA PARA EL CARRITO ---
+  const handleAddToCart = useCallback(async () => {
+    // 1. Verificar si el usuario está logueado y tiene un client_id
+    // Asumimos que el tipo User de useAuth() tiene 'client_id' si está logueado
+    if (!user || !user.id) {
+      setShowLoginModal(true); // Mostrar modal de inicio de sesión
+      return;
+    }
+
+    // 2. Validación de cantidad
+    if (quantity < 1 || !Number.isInteger(quantity)) {
+      Swal.fire(
+        "Cantidad Inválida",
+        "Por favor, ingresa una cantidad válida.",
+        "error"
+      );
+      return;
+    }
+
+    // 3. Iniciar carga
+    setIsLoading(true);
+
+    try {
+      // 4. Determinar el precio a enviar
+      const precioParaCarrito = producto.precio_oferta ?? producto.precio;
+
+      // 5. Asegurarse de que producto.id es un número (requerido por la utilidad)
+      // Si tu ID de producto se llama diferente (ej: producto.id_producto), ajusta esta línea.
+      const productoIdNumerico = producto.id as number;
+
+      if (typeof productoIdNumerico !== "number") {
+        throw new Error("El ID del producto no es un número válido.");
+      }
+
+      // 6. Llamar a la utilidad del carrito
+      const result = await agregarProductoAlCarrito(
+        user.id,
+        productoIdNumerico,
+        quantity,
+        precioParaCarrito,
+        producto.nombre,
+        producto.descripcion || "",
+        producto.imageUrl || "/placeholder.svg",
+        producto.marca || "",
+        producto.codigo || ""
+      );
+
+      // 7. Mostrar feedback
+      if (result) {
+        Swal.fire({
+          icon: "success",
+          title: "¡Agregado!",
+          text: `${quantity}x ${producto.nombre} se agregó a tu carrito.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        setQuantity(1); // Resetear la cantidad a 1
+      } else {
+        Swal.fire(
+          "Error",
+          "No se pudo agregar el producto. Inténtalo de nuevo.",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error en handleAddToCart:", error);
+      Swal.fire(
+        "Error",
+        "Ocurrió un error inesperado al agregar el producto.",
+        "error"
+      );
+    } finally {
+      // 8. Finalizar carga
+      setIsLoading(false);
+    }
+  }, [user, quantity, producto]); // Dependencias del useCallback
+  // --- FIN DE LA LÓGICA AÑADIDA ---
+
   return (
     <div>
       {showLoginModal && (
@@ -109,6 +181,7 @@ export function ProductCard({
       )}
       {isCombo ? (
         <div className={styles.card}>
+          {/* ... (Contenido de la card de Combo - sin cambios) ... */}
           <div className={styles.stockToggleContainer}>
             <div className={styles.stockInfo}>
               <span className={styles.stockLabel}>Stock:</span>
@@ -123,12 +196,6 @@ export function ProductCard({
               </span>
             </div>
           </div>
-
-          {/* {producto.precio_oferta && producto.precio_oferta < producto.precio && (
-          <div className={styles.offerBadge}>
-            <span className={styles.offerText}>¡a!</span>
-          </div>
-        )} */}
           <div className={styles.imageContainer}>
             {producto.imageUrl ? (
               <img
@@ -144,10 +211,8 @@ export function ProductCard({
               />
             )}
           </div>
-
           <div className={styles.content}>
             <h3 className={styles.title}>{producto.nombre}</h3>
-
             <div className={styles.details}>
               <div className={styles.detailItem}>
                 <span className={styles.label}>Descripcion:</span>
@@ -182,7 +247,6 @@ export function ProductCard({
                   onChange={handleStockToggle}
                   className={styles.toggleInput}
                 />
-                {/* Opcional: Mostrar un spinner o indicador de carga */}
                 {isLoading ? (
                   <span className={styles.loadingIndicator}>🔄</span>
                 ) : (
@@ -194,11 +258,6 @@ export function ProductCard({
             )}
           </div>
 
-          {/* {producto.precio_oferta && producto.precio_oferta < producto.precio && (
-          <div className={styles.offerBadge}>
-            <span className={styles.offerText}>¡a!</span>
-          </div>
-        )} */}
           <div className={styles.imageContainer}>
             {producto.imageUrl ? (
               <img
@@ -237,12 +296,10 @@ export function ProductCard({
               <div className={styles.pricingContainer}>
                 <div className={styles.originalPrice}>
                   ${formatMoney(producto.precio)}{" "}
-                  {/* <-- Aplicado el formato */}
                 </div>
                 <div className={styles.offerPrice}>
                   <span className={styles.offerPriceText}>
                     ${formatMoney(producto.precio_oferta)}{" "}
-                    {/* <-- Aplicado el formato */}
                   </span>
                   <span className={styles.discountPercentage}>
                     {Math.round(
@@ -257,12 +314,36 @@ export function ProductCard({
             ) : (
               <div className={styles.price}>
                 ${formatMoney(producto.precio)}
-              </div> /* <-- Aplicado el formato */
+              </div>
             )}
+
+            {/* --- JSX AÑADIDO PARA EL CARRITO --- */}
+            {/* Mostrar solo si NO es admin Y el producto TIENE stock */}
+            {!admin && stockEnabled && (
+              <div className={styles.actionsContainer}>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isLoading} // Deshabilitar mientras carga
+                  className={styles.addButton}
+                >
+                  {isLoading ? "Añadiendo..." : "Añadir Producto"}
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) =>
+                    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                  }
+                  className={styles.quantityInput}
+                  disabled={isLoading} // Deshabilitar mientras carga
+                />
+              </div>
+            )}
+            {/* --- FIN DEL JSX AÑADIDO --- */}
           </div>
         </div>
       )}
     </div>
   );
 }
-

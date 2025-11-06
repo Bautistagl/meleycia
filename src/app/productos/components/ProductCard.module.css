@@ -196,6 +196,7 @@
   border-radius: 6px;
   text-align: center;
   font-size: 1rem;
+  margin-left: auto;
   box-sizing: border-box; /* Ensures padding doesn't increase total width */
 }
 

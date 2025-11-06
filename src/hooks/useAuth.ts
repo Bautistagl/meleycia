@@ -19,16 +19,19 @@ const useAuth = (): UseAuthHook => {
     const getInitialSession = async (): Promise<void> => {
       try {
         setLoading(true); // Ensure loading is true before fetching
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        const {
+          data: { session: initialSession },
+          error,
+        } = await supabase.auth.getSession();
 
         if (error) {
-          console.error('Error fetching initial session:', error);
+          console.error("Error fetching initial session:", error);
           // Handle error appropriately, e.g., display an error message
           return;
         }
 
         setSession(initialSession);
-        
+
         setUser(initialSession?.user || null);
       } catch (error) { 
          if (error instanceof Error) {

@@ -7,6 +7,10 @@ import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 
+// Definimos las constantes del vendedor por defecto
+const DEFAULT_VENDEDOR_NAME = "TELEMARKETING";
+const DEFAULT_VENDEDOR_PHONE = 1133478376; 
+
 interface RegisterFormData {
   email: string;
   password: string;
@@ -95,6 +99,9 @@ const RegisterForm: React.FC = () => {
         telefono,
         direccion,
         dni,
+        // LOGICA AGREGADA: Vendedor por defecto
+        vendedor: DEFAULT_VENDEDOR_NAME, 
+        telefono_vendedor: DEFAULT_VENDEDOR_PHONE, 
       });
 
       if (insertError) {
@@ -165,7 +172,7 @@ const RegisterForm: React.FC = () => {
             )}
           </div>
           <div className={styles.inputGroup}>
-            <label htmlFor="telefono" className={styles.label}>
+            <label htmlFor="dni" className={styles.label}>
               DNI
             </label>
             <input
@@ -181,7 +188,7 @@ const RegisterForm: React.FC = () => {
             )}
           </div>
           <div className={styles.inputGroup}>
-            <label htmlFor="telefono" className={styles.label}>
+            <label htmlFor="direccion" className={styles.label}>
               Dirección
             </label>
             <input

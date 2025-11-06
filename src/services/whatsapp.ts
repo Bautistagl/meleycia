@@ -12,7 +12,7 @@ export const generarMensajeWhatsappCarrito = (
   itemsCarrito: (CarritoItem & { producto: Producto })[], // Asegúrate de que 'producto' esté incluido
   nombreCliente?: string
 ): string => {
-  let mensaje = `¡Hola! Queria hacer el siguiente pedido:\n\n`;
+  let mensaje = `Hola, Queria hacer el siguiente pedido:\n\n`;
 
   let totalGeneral = 0;
 
