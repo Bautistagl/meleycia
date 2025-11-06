@@ -128,7 +128,7 @@ const ClientsTable: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h2>Lista de Clientes</h2>
+      <h2 className={styles.title}>Lista de clientes</h2>
       <table className={styles.table}>
         <thead>
           <tr>

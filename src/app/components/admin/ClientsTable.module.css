@@ -13,7 +13,9 @@
     margin-top: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
+.title{
+    color: black;
+}
 /* Estilos de la cabecera de la tabla */
 .table thead {
     background-color: #333; /* Un color oscuro para la cabecera */
