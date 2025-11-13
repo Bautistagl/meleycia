@@ -44,12 +44,13 @@ export default function ProductsPage() {
   const [filters, setFilters] = useState({
     category: "",
     brand: "",
+    inStockOnly: false, // 🆕 AÑADIDO: Nuevo filtro para mostrar solo en stock
   });
   const [admin, setAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Total de items que cumplen los filtros para la vista actual
-  const [totalItems, setTotalItems] = useState(0); 
+  const [totalItems, setTotalItems] = useState(0);
 
   const productsPerPage = 12;
   const ORDER_BY_COLUMN = "id";
@@ -57,67 +58,81 @@ export default function ProductsPage() {
   // Función para cambiar la vista (Productos/Combos)
   const changeView = (view: CurrentView) => {
     // Si la vista ya es la actual, no hacemos nada
-    if (view === currentView) return; 
+    if (view === currentView) return;
 
     // 🔴 Importante: Siempre volver a la página 1 y limpiar el total cuando se cambia de vista
-    setCurrentPage(1); 
-    setTotalItems(0); 
+    setCurrentPage(1);
+    setTotalItems(0);
     setSearchTerm(""); // Opcional: limpiar búsqueda
-    setFilters({ category: "", brand: "" }); // Opcional: limpiar filtros
+    // Mantener inStockOnly para que persista entre vistas, o resetearlo si prefieres
+    setFilters((prev) => ({
+      category: "",
+      brand: "",
+      inStockOnly: prev.inStockOnly,
+    }));
     setCurrentView(view);
   };
 
   // 4. Función de fetch unificada (para Productos y Combos)
-  const fetchData = useCallback(async (view: CurrentView) => {
-    setIsLoading(true);
+  const fetchData = useCallback(
+    async (view: CurrentView) => {
+      setIsLoading(true);
 
-    const from = (currentPage - 1) * productsPerPage;
-    const to = from + productsPerPage - 1;
+      const from = (currentPage - 1) * productsPerPage;
+      const to = from + productsPerPage - 1;
 
-    // Determinar la tabla y las funciones de estado a usar
-    const isProductsView = view === "productos";
-    const tableName = isProductsView ? "productos" : "combos"; // <-- Usa el nombre correcto de tu tabla de combos
-    const setStateFunc = isProductsView ? setProducts : setCombos;
+      // Determinar la tabla y las funciones de estado a usar
+      const isProductsView = view === "productos";
+      const tableName = isProductsView ? "productos" : "combos"; // <-- Usa el nombre correcto de tu tabla de combos
+      const setStateFunc = isProductsView ? setProducts : setCombos;
 
-    let query = supabase
-      .from(tableName)
-      .select("*", { count: "exact" })
-      .order(ORDER_BY_COLUMN, { ascending: false });
+      let query = supabase
+        .from(tableName)
+        .select("*", { count: "exact" })
+        .order(ORDER_BY_COLUMN, { ascending: false });
 
-    // Aplicar filtros de texto (nombre y descripción)
-    if (searchTerm) {
-      query = query.or(
-        `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`
-      );
-    }
-    
-    // ⚠️ Nota: Los filtros de categoría/marca pueden no ser aplicables a Combos. 
-    // Considera limpiar o deshabilitar estos filtros si estás en la vista 'combos'.
-    if (isProductsView) {
-      if (filters.category) {
-        query = query.eq("categoria", filters.category);
+      // Aplicar filtros de texto (nombre y descripción)
+      if (searchTerm) {
+        query = query.or(
+          `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`
+        );
       }
-      if (filters.brand) {
-        query = query.eq("marca", filters.brand);
-      }
-    }
-    
-    const { data, error, count } = await query.range(from, to);
 
-    if (error) {
-      console.error(`Error fetching ${tableName}:`, error.message);
+      // 🆕 AÑADIDO: Aplicar filtro de stock
+      if (filters.inStockOnly) {
+        // Asume que tanto 'productos' como 'combos' tienen una columna 'stock' de tipo numérico.
+        query = query.gt("stock", 0);
+      }
+
+      // ⚠️ Nota: Los filtros de categoría/marca pueden no ser aplicables a Combos.
+      // Considera limpiar o deshabilitar estos filtros si estás en la vista 'combos'.
+      if (isProductsView) {
+        if (filters.category) {
+          query = query.ilike("categoria", filters.category);
+        }
+        if (filters.brand) {
+          query = query.ilike("marca", filters.brand);
+        }
+      }
+
+      const { data, error, count } = await query.range(from, to);
+
+      if (error) {
+        console.error(`Error fetching ${tableName}:`, error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (isProductsView) {
+        setProducts((data as Producto[]) || []);
+      } else {
+        setCombos((data as Combo[]) || []);
+      }
+      setTotalItems(count || 0); // Actualiza el total de la vista actual
       setIsLoading(false);
-      return;
-    }
-
-    if (isProductsView) {
-      setProducts(data as Producto[] || []);
-    } else {
-      setCombos(data as Combo[] || []);
-    }
-    setTotalItems(count || 0); // Actualiza el total de la vista actual
-    setIsLoading(false);
-  }, [currentPage, searchTerm, filters, currentView]); // 🔴 Agregamos currentView como dependencia
+    },
+    [currentPage, searchTerm, filters, currentView]
+  ); // 🔴 Agregamos currentView como dependencia
 
   useEffect(() => {
     // Cuando cambian la vista, filtros, o la página, recargamos los datos
@@ -126,11 +141,13 @@ export default function ProductsPage() {
 
   useEffect(() => {
     // Si cambia el término de búsqueda o filtros, siempre volvemos a la página 1.
+    // 'filters' ahora incluye 'inStockOnly', por lo que este efecto se dispara
+    // correctamente al cambiar el estado del nuevo filtro.
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
   }, [searchTerm, filters]);
-  
+
   // Lógica de fetch de Marcas y Categorías (no se modifica, pero recuerda que solo aplican a Productos)
   // ... (tu código para fetchBrands y fetchCategorias)
   const [brands, setBrands] = useState<
@@ -171,7 +188,7 @@ export default function ProductsPage() {
       setAdmin(true);
     }
   }, []);
-  
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   // Determinar los items a mostrar y la cantidad actual
@@ -185,25 +202,60 @@ export default function ProductsPage() {
         {/* 6. Modificación del Header para incluir botones clickeables */}
         <div className={styles.header}>
           {/* Estilos sencillos para que se vea la diferencia, ajústalos con CSS */}
-          <button 
-            onClick={() => changeView("productos")} 
-            className={`${styles.headerButton} ${currentView === "productos" ? styles.active : ''}`}
-
+          <button
+            onClick={() => changeView("productos")}
+            className={`${styles.headerButton} ${
+              currentView === "productos" ? styles.active : ""
+            }`}
           >
             <h1>Productos</h1>
           </button>
-       
-          <button 
-            onClick={() => changeView("combos")} 
-            className={`${styles.headerButton} ${currentView === "combos" ? styles.active : ''}`}
 
+          <button
+            onClick={() => changeView("combos")}
+            className={`${styles.headerButton} ${
+              currentView === "combos" ? styles.active : ""
+            }`}
           >
             <h1>Combos</h1>
+          </button>
+          <button
+            onClick={() => changeView("combos")}
+            className={`${styles.headerButton} ${
+              currentView === "combos" ? styles.active : ""
+            }`}
+          >
+            <h1>Ofertas</h1>
           </button>
         </div>
 
         <div className={styles.toolsContainer}>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+          {/* 🆕 AÑADIDO: Control de filtro de stock */}
+          <div className={`${styles.filterItem} ${styles.stockFilter}`}>
+            <input
+              id="inStockOnly"
+              type="checkbox"
+              checked={filters.inStockOnly}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  inStockOnly: e.target.checked,
+                }))
+              }
+              // Añade clases para mejorar el estilo del checkbox
+              style={{ marginRight: "8px", transform: "scale(1.2)" }}
+            />
+            <label
+              htmlFor="inStockOnly"
+              style={{ whiteSpace: "nowrap", cursor: "pointer" }}
+            >
+              Solo en Stock
+            </label>
+          </div>
+          {/* Fin del control de filtro de stock */}
+
           {/* ⚠️ Nota: Los filtros de categoría/marca sólo tienen sentido para 'productos' */}
           {currentView === "productos" && (
             <Filters
@@ -228,12 +280,20 @@ export default function ProductsPage() {
           <div className={styles.productsGrid}>
             {/* 7. Mapear 'itemsToDisplay' (que será products o combos) */}
             {itemsToDisplay.length > 0 ? (
-                itemsToDisplay.map((item) => (
-                    // Asegúrate de que ProductCard pueda aceptar tanto Producto como Combo
-                    <ProductCard key={item.id} admin={admin} isCombo={currentView === 'combos'} producto={item as Producto} />
-                ))
+              itemsToDisplay.map((item) => (
+                // Asegúrate de que ProductCard pueda aceptar tanto Producto como Combo
+                <ProductCard
+                  key={item.id}
+                  admin={admin}
+                  isCombo={currentView === "combos"}
+                  producto={item as Producto}
+                />
+              ))
             ) : (
-                <p>No se encontraron {currentView} que coincidan con los criterios de búsqueda.</p>
+              <p>
+                No se encontraron {currentView} que coincidan con los criterios
+                de búsqueda.
+              </p>
             )}
           </div>
         )}

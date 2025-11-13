@@ -1,28 +1,41 @@
+// components/BrandUploadForm.tsx
+
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "../marcas/brand.module.css";
-
+import type { BrandFormData } from "@/types";
 import { supabase } from "@/lib/supabase";
-import { CatFormData } from "@/types";
 
 interface BrandUploadFormProps {
   onCancel?: () => void;
+  id?: number;
+  name?: string;
 }
 
-export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
-  const [formData, setFormData] = useState<CatFormData>({
-    nombre: "",
+export default function BrandUploadForm({
+  onCancel,
+  id,
+  name,
+}: BrandUploadFormProps) {
+  const [formData, setFormData] = useState<BrandFormData>({
+    marca: name || "",
   });
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  useEffect(() => {
+    if (name !== undefined && name !== formData.marca) {
+      setFormData({ marca: name });
+    }
+  }, [name]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setFormData({ nombre: value });
+    setFormData({ marca: value });
 
     if (error) {
       setError("");
@@ -32,7 +45,7 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.nombre.trim()) {
+    if (!formData.marca.trim()) {
       setError("El nombre de la marca es requerido");
       return;
     }
@@ -41,24 +54,41 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
     setSuccessMessage("");
 
     try {
-      const { error: supabaseError } = await supabase
-        .from("categorias")
-        .insert([{ nombre: formData.nombre }]);
+      let supabaseError;
+
+      if (id) {
+        const { error: updateError } = await supabase
+          .from("categorias")
+          .update({ nombre: formData.marca })
+          .eq("id", id);
+
+        supabaseError = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from("categorias")
+          .insert([{ nombre: formData.marca }]);
+
+        supabaseError = insertError;
+      }
 
       if (supabaseError) {
         throw supabaseError;
       }
 
-      setSuccessMessage("Marca agregada exitosamente");
-      // Reset form
-      setFormData({ nombre: "" });
+      setSuccessMessage(
+        id
+          ? "Categoria actualizada exitosamente"
+          : "Categoria agregada exitosamente"
+      );
+
+      if (!id) {
+        setFormData({ marca: "" });
+      }
     } catch (error: unknown) {
-      // Change 'any' to 'unknown'
       console.error("Error submitting form:", error);
 
       let errorMessage = "Por favor intenta nuevamente.";
 
-      // Narrow the type of error to provide more specific messages
       if (error instanceof Error) {
         errorMessage = error.message;
       } else if (
@@ -66,8 +96,6 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
         error !== null &&
         "message" in error
       ) {
-        // This handles cases where the error might be an object with a message property,
-        // but not necessarily an instance of Error (e.g., from an API response).
         errorMessage = (error as { message: string }).message;
       } else if (typeof error === "string") {
         errorMessage = error;
@@ -85,10 +113,13 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
     }
   };
 
+  const formTitle = id ? "Editar Categoria" : "Agregar Nueva Categoria";
+  const submitButtonText = id ? "Guardar Cambios" : "Agregar Categoria";
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Agregar Nueva Categoria</h1>
+        <h1 className={styles.title}>{formTitle}</h1>
       </div>
 
       {successMessage && (
@@ -97,17 +128,17 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label htmlFor="marca" className={styles.label}>
+          <label htmlFor="categoria" className={styles.label}>
             Nombre *
           </label>
           <input
             type="text"
-            id="nombre"
-            name="nombre"
-            value={formData.nombre}
+            id="categoria"
+            name="categoria"
+            value={formData.marca}
             onChange={handleInputChange}
             className={styles.input}
-            placeholder="Ingresa el nombre de la Categoria"
+            placeholder="Ingresa el nombre de la categoria"
             required
           />
           {error && <span className={styles.errorMessage}>{error}</span>}
@@ -128,7 +159,11 @@ export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
             disabled={isLoading}
           >
             {isLoading && <span className={styles.loadingSpinner}></span>}
-            {isLoading ? "Guardando..." : "Agregar Categoria"}
+            {isLoading
+              ? id
+                ? "Guardando..."
+                : "Agregando..."
+              : submitButtonText}
           </button>
         </div>
       </form>

@@ -35,16 +35,19 @@ export function DeleteCombo({ id, name, children }: DeleteConfirmDialogProps) {
               </p>
             </div>
             <div className={styles.footer}>
-              <button className={styles.cancelButton} onClick={() => setIsOpen(false)}>
+              <button
+                className={styles.cancelButton}
+                onClick={() => setIsOpen(false)}
+              >
                 Cancelar
               </button>
               <button className={styles.deleteButton} onClick={handleDelete}>
-                Borrar Producto
+                Borrar Combo
               </button>
             </div>
           </div>
         </div>
       )}
     </>
-  )
+  );
 }

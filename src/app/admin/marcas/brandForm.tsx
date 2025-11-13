@@ -1,87 +1,109 @@
-// components/BrandUploadForm.tsx (or your BrandUploadForm file)
+// components/BrandUploadForm.tsx
+
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./brand.module.css";
 import type { BrandFormData } from "@/types";
 import { supabase } from "@/lib/supabase";
 
-
 interface BrandUploadFormProps {
   onCancel?: () => void;
+  id?: number;
+  name?: string;
 }
 
-export default function BrandUploadForm({ onCancel }: BrandUploadFormProps) {
+export default function BrandUploadForm({
+  onCancel,
+  id,
+  name,
+}: BrandUploadFormProps) {
   const [formData, setFormData] = useState<BrandFormData>({
-    marca: "", // Changed from 'name' to 'marca'
+    marca: name || "",
   });
 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  useEffect(() => {
+    if (name !== undefined && name !== formData.marca) {
+      setFormData({ marca: name });
+    }
+  }, [name]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setFormData({ marca: value }); // Changed from 'name' to 'marca'
+    setFormData({ marca: value });
 
-    // Clear error when user starts typing
     if (error) {
       setError("");
     }
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (!formData.marca.trim()) {
-    setError("El nombre de la marca es requerido");
-    return;
-  }
-
-  setIsLoading(true);
-  setSuccessMessage("");
-
-  try {
-    const { error: supabaseError } = await supabase
-      .from("marcas") // Specify the table name
-      .insert([{ marca: formData.marca }]); // Insert the 'marca' value
-
-    if (supabaseError) {
-      throw supabaseError;
+    if (!formData.marca.trim()) {
+      setError("El nombre de la marca es requerido");
+      return;
     }
 
-    setSuccessMessage("Marca agregada exitosamente");
-    // Reset form
-    setFormData({ marca: "" });
-  } catch (error: unknown) {
-    // Change 'any' to 'unknown'
-    console.error("Error submitting form:", error);
+    setIsLoading(true);
+    setSuccessMessage("");
 
-    let errorMessage = "Por favor intenta nuevamente.";
+    try {
+      let supabaseError;
 
-    // --- Type Narrowing to handle different error types ---
-    if (error instanceof Error) {
-      // If the error is an instance of the built-in Error class (or a custom error extending it)
-      errorMessage = error.message;
-    } else if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error
-    ) {
-      // If the error is an object with a 'message' property (e.g., from an API response)
-      errorMessage = (error as { message: string }).message;
-    } else if (typeof error === "string") {
-      // If the error is a simple string
-      errorMessage = error;
+      if (id) {
+        const { error: updateError } = await supabase
+          .from("marcas")
+          .update({ marca: formData.marca })
+          .eq("id", id);
+
+        supabaseError = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from("marcas")
+          .insert([{ marca: formData.marca }]);
+
+        supabaseError = insertError;
+      }
+
+      if (supabaseError) {
+        throw supabaseError;
+      }
+
+      setSuccessMessage(
+        id ? "Marca actualizada exitosamente" : "Marca agregada exitosamente"
+      );
+
+      if (!id) {
+        setFormData({ marca: "" });
+      }
+    } catch (error: unknown) {
+      console.error("Error submitting form:", error);
+
+      let errorMessage = "Por favor intenta nuevamente.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+      ) {
+        errorMessage = (error as { message: string }).message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      setError(`Error al guardar la marca: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
-    // --- End Type Narrowing ---
-
-    setError(`Error al guardar la marca: ${errorMessage}`);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleCancel = () => {
     if (onCancel) {
@@ -89,24 +111,29 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
   };
 
+  const formTitle = id ? "Editar Marca" : "Agregar Nueva Marca";
+  const submitButtonText = id ? "Guardar Cambios" : "Agregar Marca";
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Agregar Nueva Marca</h1>
+        <h1 className={styles.title}>{formTitle}</h1>
       </div>
 
-      {successMessage && <div className={styles.successMessage}>{successMessage}</div>}
+      {successMessage && (
+        <div className={styles.successMessage}>{successMessage}</div>
+      )}
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label htmlFor="marca" className={styles.label}> {/* Changed from 'name' to 'marca' */}
+          <label htmlFor="marca" className={styles.label}>
             Nombre *
           </label>
           <input
             type="text"
-            id="marca" // Changed from 'name' to 'marca'
-            name="marca" // Changed from 'name' to 'marca'
-            value={formData.marca} // Changed from 'name' to 'marca'
+            id="marca"
+            name="marca"
+            value={formData.marca}
             onChange={handleInputChange}
             className={styles.input}
             placeholder="Ingresa el nombre de la marca"
@@ -124,9 +151,17 @@ const handleSubmit = async (e: React.FormEvent) => {
           >
             Cancelar
           </button>
-          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`} disabled={isLoading}>
+          <button
+            type="submit"
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            disabled={isLoading}
+          >
             {isLoading && <span className={styles.loadingSpinner}></span>}
-            {isLoading ? "Guardando..." : "Agregar Marca"}
+            {isLoading
+              ? id
+                ? "Guardando..."
+                : "Agregando..."
+              : submitButtonText}
           </button>
         </div>
       </form>

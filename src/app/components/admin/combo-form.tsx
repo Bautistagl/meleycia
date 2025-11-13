@@ -14,6 +14,7 @@ interface ComboFormProps {
     stock?: number;
     descripcion?: string;
     imageUrl?: string;
+    codigo?: string;
   };
 }
 
@@ -44,6 +45,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
     stock: initialData?.stock || 1,
     descripcion: initialData?.descripcion || "",
     imageUrl: initialData?.imageUrl || "",
+    codigo: initialData?.codigo,
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -107,7 +109,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price, stock, descripcion } = formData;
+    const { name, price, stock, descripcion, codigo } = formData;
 
     let finalImageUrl: string | null = null;
 
@@ -130,6 +132,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
           stock: stock > 0, // Asegura que se guarde como booleano
           descripcion: descripcion,
           imageUrl: finalImageUrl,
+          codigo: codigo,
         })
         .eq("id", initialData.id);
     } else {
@@ -142,6 +145,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
             stock: stock,
             descripcion: descripcion,
             imageUrl: finalImageUrl,
+            codigo: codigo,
           },
         ])
         .select();
@@ -170,6 +174,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
         stock: 1,
         descripcion: "",
         imageUrl: "",
+        codigo: "",
       });
       setImageFile(null);
       setImageUrl(null);
@@ -240,6 +245,20 @@ export function ComboForm({ initialData }: ComboFormProps) {
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="name" className={styles.label}>
+                Codigo del combo
+              </label>
+              <input
+                id="name"
+                className={styles.input}
+                value={formData.codigo}
+                onChange={(e) =>
+                  setFormData({ ...formData, codigo: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="name" className={styles.label}>
                 Descripcion del producto
               </label>
               <textarea
@@ -290,7 +309,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
           Cancelar
         </button>
         <button type="submit" className={styles.submitButton}>
-          {initialData?.id ? "Actualizar Producto" : "Crear Producto"}
+          {initialData?.id ? "Actualizar Combo" : "Crear Combo"}
         </button>
       </div>
     </form>

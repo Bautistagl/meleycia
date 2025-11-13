@@ -1,10 +1,9 @@
-import BrandUploadForm from "./brandForm";
-
+import CategoriaForm from "../categorias/catForm";
 
 export default function Page() {
   return (
     <div>
-      <BrandUploadForm />
+      <CategoriaForm />
     </div>
-  )
+  );
 }

@@ -196,6 +196,7 @@ export function ProductCard({
               </span>
             </div>
           </div>
+
           <div className={styles.imageContainer}>
             {producto.imageUrl ? (
               <img
@@ -213,6 +214,13 @@ export function ProductCard({
           </div>
           <div className={styles.content}>
             <h3 className={styles.title}>{producto.nombre}</h3>
+
+            <div className={styles.detailItem}>
+              <span className={styles.label}>Codigo:</span>
+              <h2 className={styles.value}>
+                <strong> {producto.codigo}</strong>
+              </h2>
+            </div>
             <div className={styles.details}>
               <div className={styles.detailItem}>
                 <span className={styles.label}>Descripcion:</span>
@@ -287,7 +295,9 @@ export function ProductCard({
 
               <div className={styles.detailItem}>
                 <span className={styles.label}>Marca:</span>
-                <span className={styles.value}>{producto.marca}</span>
+                <span className={styles.value}>
+                  {producto.marca.toUpperCase()}
+                </span>
               </div>
             </div>
 
@@ -316,10 +326,10 @@ export function ProductCard({
                 ${formatMoney(producto.precio)}
               </div>
             )}
-
+            <span className={styles.iva}>El precio no incluye IVA</span>
             {/* --- JSX AÑADIDO PARA EL CARRITO --- */}
             {/* Mostrar solo si NO es admin Y el producto TIENE stock */}
-            {!admin && stockEnabled && (
+            {stockEnabled && (
               <div className={styles.actionsContainer}>
                 <button
                   onClick={handleAddToCart}

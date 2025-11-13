@@ -42,6 +42,7 @@ export function ProductsTable() {
   const [filters, setFilters] = useState({
     category: "",
     brand: "",
+    inStockOnly: false,
   });
   const [isLoading, setIsLoading] = useState(true);
 

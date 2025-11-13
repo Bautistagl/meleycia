@@ -101,7 +101,6 @@ export function CombosTable() {
           {/* El componente Search ahora cambia el estado searchTerm, que dispara la consulta */}
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </div>
-
       </div>
 
       <div className={styles.tableContainer}>
@@ -133,17 +132,19 @@ export function CombosTable() {
               products.map((product) => (
                 <tr key={product.id}>
                   <td>{product.nombre}</td>
-  <td>${formatMoney(product.precio)}</td>
+                  <td>${formatMoney(product.precio)}</td>
                   <td>{product.descripcion}</td>
-                
+
                   <td>
                     <div className={styles.actions}>
-    
-                      {/* Botón de Eliminar reincorporado */}
-                      <DeleteCombo
-                        id={product.id}
-                        name={product.nombre}
+                      <Link
+                        href={`/admin/combos/${product.id}/edit`}
+                        className={styles.editButton}
                       >
+                        <Edit size={16} />
+                      </Link>
+                      {/* Botón de Eliminar reincorporado */}
+                      <DeleteCombo id={product.id} name={product.nombre}>
                         <button className={styles.deleteButton}>
                           <Trash2 size={16} />
                         </button>

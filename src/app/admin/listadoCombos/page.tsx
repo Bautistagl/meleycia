@@ -9,11 +9,11 @@ export default function CombosPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Combos</h1>
-        <Link href="/admin/productos/new" className={styles.addButton}>
+        <Link href="/admin/combos" className={styles.addButton}>
           <Plus className={styles.plusIcon} /> Agregar combos
         </Link>
       </div>
       <CombosTable />
     </div>
-  )
+  );
 }

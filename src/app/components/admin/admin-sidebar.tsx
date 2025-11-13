@@ -62,26 +62,27 @@ export function AdminSidebar() {
                 <span>Actualizar precios</span>
               </Link>
             </li>
+
             <li>
               <Link
-                href="/admin/marcas"
+                href="/admin/listadoCategoria"
                 className={`${styles.navLink} ${
-                  isActive("/admin/marcas") ? styles.active : ""
+                  isActive("/admin/listadoCategoria") ? styles.active : ""
                 }`}
               >
-                <Tag size={20} />
-                <span>Nueva Marca</span>
+                <Layers size={20} />
+                <span>Categorias </span>
               </Link>
             </li>
             <li>
               <Link
-                href="/admin/categorias"
+                href="/admin/listadoMarcas"
                 className={`${styles.navLink} ${
-                  isActive("/admin/categorias") ? styles.active : ""
+                  isActive("/admin/listadoMarcas") ? styles.active : ""
                 }`}
               >
-                <Layers size={20} />
-                <span>Nueva Categoria </span>
+                <Tag size={20} />
+                <span>Marcas</span>
               </Link>
             </li>
             <li>
