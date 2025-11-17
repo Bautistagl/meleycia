@@ -15,7 +15,7 @@ import CartItem from "./cart-item";
 import CartSummary from "./cart-summary";
 import EmptyCart from "./empty-cart";
 import styles from "./cart.module.css";
-import { generarMensajeWhatsappCarrito } from "@/services/whatsapp";
+
 import Swal from "sweetalert2";
 
 // Definir una interfaz para los datos del cliente que necesitamos
@@ -30,35 +30,40 @@ export default function CartContainer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Nuevo estado para almacenar el teléfono del vendedor
-  const [vendedorTelefono, setVendedorTelefono] = useState<number | null>(null); 
-
+  const [vendedorTelefono, setVendedorTelefono] = useState<number | null>(null);
+  const [numeroVendedor, setNumeroVendedor] = useState<number | null>(null);
   // Función para obtener el cliente y su vendedor asignado
-  const obtenerDatosCliente = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('nombre, telefono_vendedor')
-      .eq('id', userId)
-      .single();
+  const obtenerDatosCliente = useCallback(
+    async (userId: string) => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("nombre, telefono_vendedor")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
-      console.error("Error al obtener datos del cliente:", error);
-      // Establecer un teléfono de respaldo en caso de error
-      return { telefono_vendedor: 1133478376 }; 
-    }
-    
-    // Convertir el teléfono a número o null si es necesario
-    const telefono = data?.telefono_vendedor ? parseInt(data.telefono_vendedor.toString(), 10) : null;
+      if (error) {
+        console.error("Error al obtener datos del cliente:", error);
+        // Establecer un teléfono de respaldo en caso de error
+        return { telefono_vendedor: 1133478376 };
+      }
 
-    return { 
+      // Convertir el teléfono a número o null si es necesario
+      const telefono = data?.telefono_vendedor
+        ? parseInt(data.telefono_vendedor.toString(), 10)
+        : null;
+
+      return {
         nombre: data?.nombre || user?.email || "Estimado cliente",
-        telefono_vendedor: telefono
-    };
-  }, [user?.email]);
+        telefono_vendedor: telefono,
+      };
+    },
+    [user?.email]
+  );
 
   const refetchCart = useCallback(async () => {
     if (user?.id) {
       setLoading(true);
-      
+
       // Obtener datos del cliente y vendedor
       const clienteData = await obtenerDatosCliente(user.id);
       setVendedorTelefono(clienteData.telefono_vendedor);
@@ -85,7 +90,7 @@ export default function CartContainer() {
       handleRemoveItem(itemId);
       return;
     }
-    setLoading(true); 
+    setLoading(true);
     const updatedItem = await actualizarCantidadProductoEnCarrito(
       itemId,
       newQuantity
@@ -99,7 +104,7 @@ export default function CartContainer() {
   };
 
   const handleRemoveItem = async (itemId: number) => {
-    setLoading(true); 
+    setLoading(true);
     const removed = await eliminarProductoDeCarrito(itemId);
     if (removed) {
       refetchCart();
@@ -117,6 +122,10 @@ export default function CartContainer() {
       );
       return;
     }
+    if (numeroVendedor === null) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -132,47 +141,23 @@ export default function CartContainer() {
       return;
     }
 
-    const carritoConDetalleProducto = carritoParaWhatsapp.filter(
-      (item) => item.producto
-    ) as (CarritoItem & { producto: Producto })[];
-
-    // 2. Obtener el nombre del cliente y el teléfono del vendedor
-    const clienteData = await obtenerDatosCliente(user.id);
-    const nombreCliente = clienteData.nombre;
-    const telefonoVendedor = clienteData.telefono_vendedor;
-    
-    // ** Teléfono por defecto si falla la obtención (ej. TELEMARKETING) **
-    const targetPhone = telefonoVendedor || 1133478376;
-    
-// 3. Generar el mensaje de WhatsApp (Mensaje en formato de texto plano)
-const mensajePlano = generarMensajeWhatsappCarrito(
-  carritoConDetalleProducto,
-  nombreCliente
-);
-
-// 4. Codificar el mensaje para URL (¡LA CLAVE!)
-const mensajeCodificado = encodeURIComponent(mensajePlano);
-
-// 5. Construir la URL de WhatsApp con el teléfono dinámico del vendedor
-const urlWhatsapp = `https://wa.me/+549${targetPhone}/?text=${mensajeCodificado}`;
-
-// 6. Redirigir al usuario a WhatsApp
-window.open(urlWhatsapp, "_blank");
-
-
     Swal.fire({
-      title: "Pedido enviado por whatsapp",
+      title: "Su pedido ha sido recibido, nos estaremos comunicando en breve.",
       icon: "success",
     });
 
     // 6. Crear el pedido en la base de datos DESPUÉS de redirigir (opcional, ajusta tu flujo)
-    const nuevoPedido = await crearPedidoDesdeCarrito(user.id, carritoParaWhatsapp);
+    const nuevoPedido = await crearPedidoDesdeCarrito(
+      user.id,
+      carritoParaWhatsapp,
+      numeroVendedor
+    );
 
     if (!nuevoPedido) {
       // Mostrar un error de DB pero permitir que continúe el flujo de WhatsApp
       console.error("Hubo un error al crear el pedido en la base de datos.");
     }
-    
+
     refetchCart();
     setLoading(false);
   };
@@ -239,6 +224,7 @@ window.open(urlWhatsapp, "_blank");
           loading={loading}
           items={cartItems}
           onCheckout={handleEnviarPedidoWhatsapp}
+          onSelectVendedor={setNumeroVendedor}
         />
       </div>
     </div>

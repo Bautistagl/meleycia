@@ -1,20 +1,45 @@
 "use client"
 
-import { useMemo } from "react"
-import type { CarritoItem } from "@/types"
-import styles from "./cart-summary.module.css"
+import { useMemo, useState } from "react";
+import type { CarritoItem } from "@/types";
+import styles from "./cart-summary.module.css";
 
 interface CartSummaryProps {
-  items: CarritoItem[]
-  onCheckout: () => void
-  loading:boolean
+  items: CarritoItem[];
+  onCheckout: () => void;
+  loading: boolean;
+  onSelectVendedor: (num: number) => void;
 }
 
 export default function CartSummary({
   items,
   onCheckout,
   loading,
+  onSelectVendedor,
 }: CartSummaryProps) {
+  const [vendedor, setVendedor] = useState("");
+
+  const vendedores = [
+    { nombre: "No tengo vendedor", numero: 1 },
+    { nombre: "OSCAR", numero: 51 },
+    { nombre: "FLAVIO", numero: 52 },
+    { nombre: "MARITA", numero: 53 },
+    { nombre: "LEONARDO", numero: 54 },
+    { nombre: "GUALA", numero: 56 },
+    { nombre: "ANDRES", numero: 57 },
+    { nombre: "RICARDO", numero: 59 },
+    { nombre: "GRAFF", numero: 62 },
+    { nombre: "MARCO", numero: 64 },
+    { nombre: "ROSA", numero: 75 },
+    { nombre: "LORENA", numero: 76 },
+    { nombre: "CHRISTIAN", numero: 77 },
+    { nombre: "LUCAS", numero: 4 },
+    { nombre: "FELIX", numero: 9 },
+    { nombre: "JORGE", numero: 18 },
+    { nombre: "ALEJANDRA", numero: 19 },
+    { nombre: "NAHUEL", numero: 26 },
+  ];
+
   const subtotal = useMemo(() => {
     return items.reduce(
       (sum, item) => sum + item.producto?.precio * item.cantidad,
@@ -31,17 +56,44 @@ export default function CartSummary({
           <span>Total</span>
           <span>${total.toFixed(2)}</span>
         </div>
+
+        <label style={{ marginTop: "1rem", display: "block" }}>
+          Selecciona tu vendedor antes de hacer el pedido
+        </label>
+
+        <select
+          value={vendedor}
+          className={styles.select}
+          onChange={(e) => {
+            const nombre = e.target.value;
+            setVendedor(nombre);
+
+            const obj = vendedores.find((v) => v.nombre === nombre);
+            if (obj) onSelectVendedor(obj.numero);
+          }}
+        >
+          <option value="">-- Seleccionar --</option>
+          {vendedores.map((v) => (
+            <option key={v.numero} value={v.nombre}>
+              {v.nombre}
+            </option>
+          ))}
+        </select>
+
         <p>
           Los precios no incluyen IVA y pueden ser modificados sin previo aviso.
         </p>
+
         <div className={styles.actions}>
-          <button
-            className={styles.checkoutBtn}
-            onClick={onCheckout}
-            disabled={loading || items.length === 0}
-          >
-            Realizar Pedido por WhatsApp
-          </button>
+          {vendedor !== "" && (
+            <button
+              className={styles.checkoutBtn}
+              onClick={onCheckout}
+              disabled={loading || items.length === 0}
+            >
+              Realizar Pedido
+            </button>
+          )}
 
           <a href="/productos" className={styles.continueBtn}>
             CONTINUAR PEDIDO
