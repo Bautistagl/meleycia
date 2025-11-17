@@ -149,8 +149,8 @@ export default function CartContainer() {
     // 6. Crear el pedido en la base de datos DESPUÉS de redirigir (opcional, ajusta tu flujo)
     const nuevoPedido = await crearPedidoDesdeCarrito(
       user.id,
-      carritoParaWhatsapp,
-      numeroVendedor
+      carritoParaWhatsapp
+      // numeroVendedor
     );
 
     if (!nuevoPedido) {

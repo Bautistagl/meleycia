@@ -99,8 +99,8 @@ export const eliminarProductoDeCarrito = async (
 
 export const crearPedidoDesdeCarrito = async (
   clienteId: string,
-  itemsCarrito: CarritoItem[],
-  numeroVendedor: number
+  itemsCarrito: CarritoItem[]
+  // numeroVendedor: number
 ): Promise<Pedido | null> => {
   if (itemsCarrito.length === 0) return null;
 
@@ -116,12 +116,11 @@ export const crearPedidoDesdeCarrito = async (
       cliente_id: clienteId,
       total: totalPedido,
       estado: "pendiente",
-      numero_vendedor: numeroVendedor,
+      // numero_vendedor: numeroVendedor,
     })
     .select()
     .single();
-  console.log("pedidoError:", pedidoError);
-  console.log("newPedido:", newPedido);
+
   // Si Supabase no devuelve fila, también es error
   if (pedidoError || !newPedido) {
     console.error("Error al crear pedido:", pedidoError);
