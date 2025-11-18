@@ -48,18 +48,19 @@ export default function PedidosList() {
   const [vendedorLocal, setVendedorLocal] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  // hook 1
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // hook 2
   useEffect(() => {
     if (!mounted) return;
     const mail = window.localStorage.getItem("meleyciamail");
     setVendedorLocal(mail ? mail.split("@")[0].trim().toLowerCase() : "");
   }, [mounted]);
 
-  if (!mounted) return null;
-
+  // hook 3
   useEffect(() => {
     const fetchPedidos = async () => {
       const { data } = await supabase
@@ -83,6 +84,8 @@ export default function PedidosList() {
     fetchPedidos();
   }, []);
 
+  // Corte único después de todos los hooks
+  if (!mounted) return null;
   const cargarItemsPedido = async (pedido: Pedido) => {
     setLoadingItems(true);
 
