@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-("use client");
+
 
 import Navbar from "../components/landing/Navbar";
 import PedidosList from "./PedidosList";
