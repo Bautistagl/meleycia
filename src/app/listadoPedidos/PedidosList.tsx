@@ -54,15 +54,11 @@ export default function PedidosList() {
 
   useEffect(() => {
     if (!mounted) return;
-
     const mail = window.localStorage.getItem("meleyciamail");
-    if (mail) {
-      const nombre = mail.split("@")[0].trim().toLowerCase();
-      setVendedorLocal(nombre);
-    } else {
-      setVendedorLocal("");
-    }
+    setVendedorLocal(mail ? mail.split("@")[0].trim().toLowerCase() : "");
   }, [mounted]);
+
+  if (!mounted) return null;
 
   useEffect(() => {
     const fetchPedidos = async () => {
