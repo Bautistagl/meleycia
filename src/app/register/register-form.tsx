@@ -166,6 +166,7 @@ const RegisterForm: React.FC = () => {
               onChange={(e) => handleInputChange("telefono", e.target.value)}
               className={styles.input}
               autoComplete="tel"
+              required
             />
             {formErrors.telefono && (
               <span className={styles.fieldError}>{formErrors.telefono}</span>

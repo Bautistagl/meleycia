@@ -99,7 +99,10 @@ export function ProductCard({
 
     try {
       // 4. Determinar el precio a enviar
-      const precioParaCarrito = producto.precio_oferta ?? producto.precio;
+      const precioParaCarrito =
+        producto.precio_oferta && producto.precio_oferta > 0
+          ? producto.precio_oferta
+          : producto.precio;
 
       // 5. Asegurarse de que producto.id es un número (requerido por la utilidad)
       // Si tu ID de producto se llama diferente (ej: producto.id_producto), ajusta esta línea.
@@ -128,7 +131,7 @@ export function ProductCard({
           icon: "success",
           title: "¡Agregado!",
           text: `${quantity}x ${producto.nombre} se agregó a tu carrito.`,
-          timer: 2000,
+          timer: 1200,
           showConfirmButton: false,
         });
         setQuantity(1); // Resetear la cantidad a 1

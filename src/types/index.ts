@@ -20,6 +20,7 @@ export interface CarritoItem {
   pedido_id?: string;
   cantidad: number;
   precio_unitario: number;
+  precio_oferta: number;
   precio_total: number;
   descripcion: string;
   foto: string;

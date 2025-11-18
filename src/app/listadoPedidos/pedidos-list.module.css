@@ -66,19 +66,25 @@
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;   /* Antes: center */
+  padding-top: 2rem;         /* Nuevo */
+  padding-bottom: 1rem;
   z-index: 20;
 }
 
-/* Caja del modal */
+/* Modal */
 .modal {
   background: #ffffff;
-  padding: 1.2rem;
+  padding: 1.4rem;
   border-radius: 12px;
-  width: 420px;
-  max-height: 90vh;
-  overflow-y: auto;
+  width: 95%;
+  max-width: 720px;
+  max-height: calc(70vh); /* Ajuste para no pegarse arriba */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+  margin-top: 15vh;
 }
 
 .modal h3 {
@@ -87,47 +93,65 @@
   font-weight: 700;
 }
 
+/* Ajuste de info superior */
+.info {
+  margin-bottom: 0.3rem;
+  color: black;
+}
+
 .modal section strong {
   color: #333;
 }
 
 /* Tabla de items del pedido */
+.itemsContainer {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 0.8rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+/* Tabla de items */
 .itemsTable {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
   background: #ffffff;
 }
 
-.itemsTable th {
+.itemsTable thead th {
   background: #f3f3f3;
   text-align: left;
   padding: 10px;
   font-size: 0.85rem;
   border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .itemsTable td {
   padding: 10px;
   border-bottom: 1px solid #efefef;
   font-size: 0.85rem;
+  word-break: break-word;
 }
 
 .itemsRow:hover {
   background: #fafafa;
 }
 
-/* Botón cerrar */
 .btnCerrar {
   margin-top: 1rem;
   width: 100%;
   background: #333;
   color: white;
   border: none;
-  padding: 8px;
-  font-size: 0.9rem;
+  padding: 10px;
+  font-size: 0.95rem;
   border-radius: 6px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .btnCerrar:hover {

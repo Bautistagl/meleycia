@@ -30,24 +30,28 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
   }
 
   const incrementQuantity = () => {
-    const newQuantity = quantity + 1
-    setQuantity(newQuantity)
-    updateQuantity(item.id, newQuantity)
-  }
+    const newQuantity = quantity + 1;
+    setQuantity(newQuantity);
+    updateQuantity(item.id, newQuantity);
+  };
 
   const decrementQuantity = () => {
-    if (quantity <= 1) return
-    const newQuantity = quantity - 1
-    setQuantity(newQuantity)
-    updateQuantity(item.id, newQuantity)
-  }
+    if (quantity <= 1) return;
+    const newQuantity = quantity - 1;
+    setQuantity(newQuantity);
+    updateQuantity(item.id, newQuantity);
+  };
 
   const handleRemove = () => {
-    removeItem(item.id)
-  }
+    removeItem(item.id);
+  };
 
-  const totalPrice = item.producto?.precio * quantity
- 
+  const precioBase = item.producto?.precio ?? 0;
+  const oferta = item.producto?.precio_oferta;
+  const precioFinal = oferta && oferta > 0 ? oferta : precioBase;
+
+  const totalPrice = precioFinal * quantity;
+
   return (
     <div className={styles.cartItem}>
       <div className={styles.product}>
@@ -69,8 +73,7 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
       </div>
 
       <div className={styles.price}>
-        <span className={styles.mobileLabel}>Precio:</span>$
-        {item.producto?.precio}
+        <span className={styles.mobileLabel}>Precio:</span>${precioFinal}
       </div>
 
       <div className={styles.quantity}>

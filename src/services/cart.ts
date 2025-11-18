@@ -11,7 +11,7 @@ export const obtenerCarritoActivoCliente = async (
       `
       *,
       producto:productos (
-        id, nombre, precio, stock
+        id, nombre, precio, stock, precio_oferta
       )
     `
     )
@@ -99,24 +99,24 @@ export const eliminarProductoDeCarrito = async (
 
 export const crearPedidoDesdeCarrito = async (
   clienteId: string,
-  itemsCarrito: CarritoItem[]
-  // numeroVendedor: number
+  itemsCarrito: CarritoItem[],
+  numeroVendedor: number,
+  nombreVendedor: string
 ): Promise<Pedido | null> => {
   if (itemsCarrito.length === 0) return null;
-
   const totalPedido = itemsCarrito.reduce(
     (sum, item) => sum + item.cantidad * item.precio_unitario,
     0
   );
 
-  // 1. Crear pedido
   const { data: newPedido, error: pedidoError } = await supabase
     .from("pedidos")
     .insert({
       cliente_id: clienteId,
       total: totalPedido,
       estado: "pendiente",
-      // numero_vendedor: numeroVendedor,
+      numero_vendedor: numeroVendedor,
+      vendedor: nombreVendedor,
     })
     .select()
     .single();

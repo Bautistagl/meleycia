@@ -32,7 +32,14 @@ export default function CartContainer() {
   // Nuevo estado para almacenar el teléfono del vendedor
   const [vendedorTelefono, setVendedorTelefono] = useState<number | null>(null);
   const [numeroVendedor, setNumeroVendedor] = useState<number | null>(null);
+  const [nombreVendedor, setNombreVendedor] = useState<string | null>(null);
   // Función para obtener el cliente y su vendedor asignado
+
+  const handleVendedor = (vendedor: { nombre: string; numero: number }) => {
+    setNumeroVendedor(vendedor.numero);
+    setNombreVendedor(vendedor.nombre);
+  };
+
   const obtenerDatosCliente = useCallback(
     async (userId: string) => {
       const { data, error } = await supabase
@@ -149,8 +156,9 @@ export default function CartContainer() {
     // 6. Crear el pedido en la base de datos DESPUÉS de redirigir (opcional, ajusta tu flujo)
     const nuevoPedido = await crearPedidoDesdeCarrito(
       user.id,
-      carritoParaWhatsapp
-      // numeroVendedor
+      carritoParaWhatsapp,
+      numeroVendedor,
+      nombreVendedor ?? "TELEMARKETING"
     );
 
     if (!nuevoPedido) {
@@ -224,7 +232,7 @@ export default function CartContainer() {
           loading={loading}
           items={cartItems}
           onCheckout={handleEnviarPedidoWhatsapp}
-          onSelectVendedor={setNumeroVendedor}
+          onSelectVendedor={handleVendedor}
         />
       </div>
     </div>

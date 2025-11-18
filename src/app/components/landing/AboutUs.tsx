@@ -34,7 +34,7 @@ export default function AboutUs() {
 
           <div className={styles.imageContainer}>
             <img
-              src="/placeholder.svg?height=400&width=500"
+              src="/imagenLanding.jpg"
               alt="Mele y CIA warehouse operations"
               className={styles.image}
             />

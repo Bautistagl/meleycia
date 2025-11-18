@@ -1,71 +1,120 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import styles from "./pedidos-list.module.css"
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import styles from "./pedidos-list.module.css";
+
+interface Cliente {
+  nombre: string | null;
+  telefono: string | null;
+  direccion: string | null;
+}
 
 interface Pedido {
-  id: number
-  created_at: string
-  estado: string | null
-  observaciones: string | null
-  cliente_id: string
-  total: number | null
-  numero_vendedor: number | null
+  id: number;
+  created_at: string;
+  estado: string | null;
+  observaciones: string | null;
+  cliente_id: string;
+  total: number | null;
+  numero_vendedor: number | null;
+  vendedor: string | null;
+  cliente: Cliente | null;
 }
 
 interface PedidoItem {
-  id: number
-  pedido_id: number
-  producto_id: number
-  cantidad: number
-  precio_unitario: number
-  nombre_prod: string
-  descripcion: string | null
-  foto: string | null
-  marca: string | null
-  codigo: string | null
+  id: number;
+  pedido_id: number;
+  producto_id: number;
+  cantidad: number;
+  precio_unitario: number;
+  precio_oferta: number;
+  nombre_prod: string;
+  descripcion: string | null;
+  foto: string | null;
+  marca: string | null;
+  codigo: string | null;
 }
 
 export default function PedidosList() {
-  const [pedidos, setPedidos] = useState<Pedido[]>([])
-  const [loading, setLoading] = useState(true)
-  const [pedidoSeleccionado, setPedidoSeleccionado] = useState<Pedido | null>(null)
-  const [itemsPedido, setItemsPedido] = useState<PedidoItem[]>([])
-  const [loadingItems, setLoadingItems] = useState(false)
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pedidoSeleccionado, setPedidoSeleccionado] = useState<Pedido | null>(
+    null
+  );
+  const [itemsPedido, setItemsPedido] = useState<PedidoItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
+
+  const [vendedorLocal, setVendedorLocal] = useState("");
+
+  useEffect(() => {
+    const mail = localStorage.getItem("meleyciamail");
+
+    if (mail) {
+      const nombre = mail.split("@")[0].trim();
+      setVendedorLocal(nombre);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchPedidos = async () => {
       const { data, error } = await supabase
         .from("pedidos")
-        .select("*")
-        .order("created_at", { ascending: false })
+        .select(
+          `
+            *,
+            cliente:cliente_id (
+              nombre,
+              telefono,
+              direccion
+            )
+          `
+        )
+        .order("created_at", { ascending: false });
 
-      if (!error && data) setPedidos(data)
-      setLoading(false)
-    }
+      if (!error && data) setPedidos(data);
+      setLoading(false);
+    };
 
-    fetchPedidos()
-  }, [])
+    fetchPedidos();
+  }, []);
 
   const cargarItemsPedido = async (pedido: Pedido) => {
-    setLoadingItems(true)
+    setLoadingItems(true);
+
     const { data, error } = await supabase
       .from("pedido_items")
       .select("*")
-      .eq("pedido_id", pedido.id)
+      .eq("pedido_id", pedido.id);
 
-    if (!error && data) setItemsPedido(data)
-    setLoadingItems(false)
-  }
+    if (!error && data) setItemsPedido(data);
+    setLoadingItems(false);
+  };
 
   const abrirDetalles = async (pedido: Pedido) => {
-    setPedidoSeleccionado(pedido)
-    await cargarItemsPedido(pedido)
-  }
+    setPedidoSeleccionado(pedido);
+    await cargarItemsPedido(pedido);
+  };
 
-  if (loading) return <div>Cargando pedidos...</div>
-  if (pedidos.length === 0) return <div>No hay pedidos registrados.</div>
+  if (loading) return <div>Cargando pedidos...</div>;
+
+  const pedidosFiltrados = pedidos.filter((p) => {
+    if (!vendedorLocal) return false;
+
+    const mail = localStorage.getItem("meleyciamail") ?? "";
+
+    if (mail === "meleycia@admin.com") {
+      return p.numero_vendedor === 1;
+    }
+
+    const vendedorPedido = (p.vendedor ?? "").toLowerCase();
+    const vendedorLocalLower = vendedorLocal.toLowerCase();
+
+    return vendedorPedido === vendedorLocalLower;
+  });
+
+  if (pedidosFiltrados.length === 0)
+    return <div>No hay pedidos para este vendedor.</div>;
 
   return (
     <div className={styles.wrapper}>
@@ -79,18 +128,22 @@ export default function PedidosList() {
             <th>Estado</th>
             <th>Total</th>
             <th>Vendedor</th>
+            <th>Cliente</th>
+            <th>Teléfono</th>
             <th>Acciones</th>
           </tr>
         </thead>
 
         <tbody>
-          {pedidos.map((p) => (
+          {pedidosFiltrados.map((p) => (
             <tr key={p.id} className={styles.row}>
               <td>{p.id}</td>
               <td>{new Date(p.created_at).toLocaleString()}</td>
               <td>{p.estado || "-"}</td>
-              <td>{p.total ?? "-"}</td>
-              <td>{p.numero_vendedor ?? "-"}</td>
+              <td>{p.total?.toFixed(2) ?? "-"}</td>
+              <td>{p.vendedor ?? "-"}</td>
+              <td>{p.cliente?.nombre ?? "-"}</td>
+              <td>{p.cliente?.telefono ?? "-"}</td>
               <td>
                 <button
                   className={styles.btnDetalles}
@@ -109,50 +162,75 @@ export default function PedidosList() {
           <div className={styles.modal}>
             <h3>Pedido #{pedidoSeleccionado.id}</h3>
 
-            <p><strong>Fecha:</strong> {new Date(pedidoSeleccionado.created_at).toLocaleString()}</p>
-            <p><strong>Estado:</strong> {pedidoSeleccionado.estado || "-"}</p>
-            <p><strong>Observaciones:</strong> {pedidoSeleccionado.observaciones || "-"}</p>
-            <p><strong>Cliente ID:</strong> {pedidoSeleccionado.cliente_id}</p>
-            <p><strong>Total:</strong> {pedidoSeleccionado.total ?? "-"}</p>
-            <p><strong>N° vendedor:</strong> {pedidoSeleccionado.numero_vendedor ?? "-"}</p>
+            <p className={styles.info}>
+              <strong>Fecha:</strong>{" "}
+              {new Date(pedidoSeleccionado.created_at).toLocaleString()}
+            </p>
+            <p className={styles.info}>
+              <strong>Estado:</strong> {pedidoSeleccionado.estado || "-"}
+            </p>
 
-            <h4>Productos del pedido</h4>
+            <p className={styles.info}>
+              <strong>Total:</strong> {pedidoSeleccionado.total ?? "-"}
+            </p>
+
+            <p className={styles.info}>
+              <strong>Cliente:</strong>{" "}
+              {pedidoSeleccionado.cliente?.nombre ?? "-"}
+            </p>
+            <p className={styles.info}>
+              <strong>Teléfono:</strong>{" "}
+              {pedidoSeleccionado.cliente?.telefono ?? "-"}
+            </p>
+            <p className={styles.info}>
+              <strong>Direccion:</strong>{" "}
+              {pedidoSeleccionado.cliente?.direccion ?? "-"}
+            </p>
 
             {loadingItems && <div>Cargando productos...</div>}
-
             {!loadingItems && itemsPedido.length === 0 && (
               <div>No hay items asociados.</div>
             )}
-
             {!loadingItems && itemsPedido.length > 0 && (
-              <table className={styles.itemsTable}>
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {itemsPedido.map((item) => (
-                    <tr key={item.id} className={styles.itemsRow}>
-                      <td>{item.nombre_prod}</td>
-                      <td>{item.cantidad}</td>
-                      <td>{item.precio_unitario}</td>
-                      <td>{item.cantidad * item.precio_unitario}</td>
+              <div className={styles.itemsContainer}>
+                <table className={styles.itemsTable}>
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Cant.</th>
+                      <th>Precio</th>
+                      <th>Total</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody>
+                    {itemsPedido.map((item) => {
+                      const precio =
+                        item.precio_oferta && item.precio_oferta > 0
+                          ? item.precio_oferta
+                          : item.precio_unitario;
+
+                      return (
+                        <tr key={item.id} className={styles.itemsRow}>
+                          <td className={styles.info}>{item.nombre_prod}</td>
+                          <td className={styles.info}>{item.cantidad}</td>
+                          <td className={styles.info}>{precio}</td>
+                          <td className={styles.info}>
+                            {item.cantidad * precio}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             <button
               className={styles.btnCerrar}
               onClick={() => {
-                setPedidoSeleccionado(null)
-                setItemsPedido([])
+                setPedidoSeleccionado(null);
+                setItemsPedido([]);
               }}
             >
               Cerrar
@@ -161,5 +239,5 @@ export default function PedidosList() {
         </div>
       )}
     </div>
-  )
+  );
 }

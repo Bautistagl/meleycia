@@ -10,33 +10,24 @@ import { useRouter } from "next/navigation";
 const Navbar = () => {
   const router = useRouter();
   const [user, setUser] = useState(false);
-  const [admin, setAdmin] = useState(false)
+  const [admin, setAdmin] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    const mailCliente = localStorage.getItem("meleyciamail") ?? "";
 
-    const mailCliente = localStorage.getItem('meleyciamail') 
-    if (mailCliente == 'meleycia@admin.com') {
-      setAdmin(true)
+    if (mailCliente === "meleycia@admin.com") {
+      setAdmin(true);
     }
-  
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session) {
-          setUser(true);
-        } else {
-          setUser(false);
-        }
+        setUser(!!session);
       }
     );
 
-    // Obtener la sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(true);
-      } else {
-        setUser(false);
-      }
-      
+      setUser(!!session);
     });
 
     return () => {
@@ -44,20 +35,21 @@ const Navbar = () => {
     };
   }, [router]);
 
-  const [isOpen, setIsOpen] = useState(false);
-
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error logging out:", error.message);
-    } else {
-      localStorage.clear()
-      router.push("/login"); // Redirect to login page after logout
+    if (!error) {
+      localStorage.clear();
+      router.push("/login");
     }
   };
+
+  const mail = localStorage.getItem("meleyciamail") ?? "";
+  const esVendedor = mail.includes("@ventasmele.com");
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.logoContainer}>
@@ -65,49 +57,60 @@ const Navbar = () => {
           <Image src="/logo2.JPG" alt="" height={230} width={440} />
         </Link>
       </div>
+
       <div className={`${styles.navLinks} ${isOpen ? styles.open : ""}`}>
-        {admin ? (
+        {admin && (
           <Link href="/admin/productos" className={styles.navLink}>
             Backoffice
           </Link>
-        ) : (
-          ""
         )}
-        <Link
-          target="_blank"
-          href="https://wa.me/+5491138824301"
-          className={styles.navLink}
-        >
-          Contacto
-        </Link>
+
         <Link href="/productos" className={styles.navLink}>
           Productos
         </Link>
-        <Link href="/pedido" className={styles.navLink}>
-          Carrito
-        </Link>
-        <Link href="/pedido">
-          <Image
-            src="/cartIcon.png"
-            alt="Shopping Cart"
-            width={30}
-            height={30}
-            className={styles.cartIcon2}
-          />
-        </Link>
+
+        {(admin || esVendedor) && (
+          <Link href="/listadoPedidos" className={styles.navLink}>
+            Pedidos
+          </Link>
+        )}
+        {!admin && !esVendedor && (
+          <Link href="/pedidoCliente" className={styles.navLink}>
+            Pedidos
+          </Link>
+        )}
+
+        {!esVendedor && (
+          <>
+            <Link href="/pedido" className={styles.navLink}>
+              Carrito
+            </Link>
+
+            <Link href="/pedido">
+              <Image
+                src="/cartIcon.png"
+                alt="Shopping Cart"
+                width={30}
+                height={30}
+                className={styles.cartIcon2}
+              />
+            </Link>
+          </>
+        )}
       </div>
+
       {user ? (
         <div style={{ display: "flex" }}>
-          {" "}
           <button className={styles.ctabutton3} onClick={handleLogout}>
             Cerrar Sesión
-          </button>{" "}
+          </button>
         </div>
       ) : (
         <Link href="/login">
-          <button className="cta-button3">Iniciar Sesión</button>{" "}
+          <button className="cta-button3">Iniciar Sesión</button>
         </Link>
       )}
+
       <div
         className={`${styles.mobileMenuToggle} ${isOpen ? styles.open : ""}`}
         onClick={toggleMenu}
