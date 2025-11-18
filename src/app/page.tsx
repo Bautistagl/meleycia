@@ -1,4 +1,4 @@
-"use client";
+export const dynamic = "force-dynamic";
 import AboutUs from "./components/landing/AboutUs";
 import BannerCarousel from "./components/landing/banner-carousel";
 

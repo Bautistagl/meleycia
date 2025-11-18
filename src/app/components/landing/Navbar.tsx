@@ -12,29 +12,34 @@ const Navbar = () => {
   const [user, setUser] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const mailCliente = localStorage.getItem("meleyciamail") ?? "";
+useEffect(() => {
+  setMounted(true);
+}, []);
 
-    if (mailCliente === "meleycia@admin.com") {
-      setAdmin(true);
-    }
+useEffect(() => {
+  const mailCliente = localStorage.getItem("meleyciamail") ?? "";
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(!!session);
-      }
-    );
+  if (mailCliente === "meleycia@admin.com") {
+    setAdmin(true);
+  }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+  const { data: authListener } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
       setUser(!!session);
-    });
+    }
+  );
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router]);
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(!!session);
+  });
 
+  return () => {
+    authListener.subscription.unsubscribe();
+  };
+}, [router]);
+if (!mounted) return null;
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
