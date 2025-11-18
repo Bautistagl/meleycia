@@ -45,20 +45,28 @@ export default function PedidosList() {
   const [itemsPedido, setItemsPedido] = useState<PedidoItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
-  const [vendedorLocal, setVendedorLocal] = useState("");
+  const [vendedorLocal, setVendedorLocal] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const mail = localStorage.getItem("meleyciamail");
-
-    if (mail) {
-      const nombre = mail.split("@")[0].trim();
-      setVendedorLocal(nombre);
-    }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
+    const mail = window.localStorage.getItem("meleyciamail");
+    if (mail) {
+      const nombre = mail.split("@")[0].trim().toLowerCase();
+      setVendedorLocal(nombre);
+    } else {
+      setVendedorLocal("");
+    }
+  }, [mounted]);
+
+  useEffect(() => {
     const fetchPedidos = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("pedidos")
         .select(
           `
@@ -72,7 +80,7 @@ export default function PedidosList() {
         )
         .order("created_at", { ascending: false });
 
-      if (!error && data) setPedidos(data);
+      if (data) setPedidos(data);
       setLoading(false);
     };
 
@@ -82,12 +90,12 @@ export default function PedidosList() {
   const cargarItemsPedido = async (pedido: Pedido) => {
     setLoadingItems(true);
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("pedido_items")
       .select("*")
       .eq("pedido_id", pedido.id);
 
-    if (!error && data) setItemsPedido(data);
+    if (data) setItemsPedido(data);
     setLoadingItems(false);
   };
 
@@ -96,22 +104,23 @@ export default function PedidosList() {
     await cargarItemsPedido(pedido);
   };
 
+  if (!mounted) return null;
+
   if (loading) return <div>Cargando pedidos...</div>;
 
-  const pedidosFiltrados = pedidos.filter((p) => {
-    if (!vendedorLocal) return false;
+  const pedidosFiltrados = (() => {
+    if (!vendedorLocal) return [];
 
-    const mail = localStorage.getItem("meleyciamail") ?? "";
+    const mail = window.localStorage.getItem("meleyciamail") ?? "";
 
     if (mail === "meleycia@admin.com") {
-      return p.numero_vendedor === 1;
+      return pedidos.filter((p) => p.numero_vendedor === 1);
     }
 
-    const vendedorPedido = (p.vendedor ?? "").toLowerCase();
-    const vendedorLocalLower = vendedorLocal.toLowerCase();
-
-    return vendedorPedido === vendedorLocalLower;
-  });
+    return pedidos.filter(
+      (p) => (p.vendedor ?? "").toLowerCase() === vendedorLocal
+    );
+  })();
 
   if (pedidosFiltrados.length === 0)
     return <div>No hay pedidos para este vendedor.</div>;

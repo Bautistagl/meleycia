@@ -46,25 +46,35 @@ export default function PedidosCliente() {
   const [loadingItems, setLoadingItems] = useState(false);
 
   const [clienteId, setClienteId] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [mailLocal, setMailLocal] = useState("");
 
-useEffect(() => {
-  const cargarCliente = async () => {
-    const mail = localStorage.getItem("meleyciamail") ?? "";
-    if (!mail) return;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    const { data, error } = await supabase
-      .from("clientes")
-      .select("id")
-      .eq("email", mail)
-      .single();
+  useEffect(() => {
+    if (!mounted) return;
 
-    if (!error && data) {
-      setClienteId(data.id);
-    }
-  };
+    const mail = window.localStorage.getItem("meleyciamail") ?? "";
+    setMailLocal(mail);
 
-  cargarCliente();
-}, []);
+    const cargarCliente = async () => {
+      if (!mail) return;
+
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("email", mail)
+        .single();
+
+      if (!error && data) {
+        setClienteId(data.id);
+      }
+    };
+
+    cargarCliente();
+  }, [mounted]);
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -106,17 +116,19 @@ useEffect(() => {
     await cargarItemsPedido(pedido);
   };
 
+  if (!mounted) return null;
+
   if (loading) return <div>Cargando pedidos...</div>;
 
- const pedidosFiltrados = pedidos.filter((p) => {
-  const mail = localStorage.getItem("meleyciamail") ?? "";
+  const pedidosFiltrados = (() => {
+    if (!mailLocal) return [];
 
-  if (mail === "meleycia@admin.com") {
-    return p.numero_vendedor === 1;
-  }
+    if (mailLocal === "meleycia@admin.com") {
+      return pedidos.filter((p) => p.numero_vendedor === 1);
+    }
 
-  return p.cliente_id === clienteId;
-});
+    return pedidos.filter((p) => p.cliente_id === clienteId);
+  })();
 
   if (pedidosFiltrados.length === 0)
     return <div>No hay pedidos registrados para este cliente.</div>;
@@ -143,7 +155,9 @@ useEffect(() => {
               <td>{p.id}</td>
               <td>{new Date(p.created_at).toLocaleString()}</td>
               <td>{p.estado || "-"}</td>
-              <td><strong>${p.total?.toFixed(2) ?? "-"}</strong></td>
+              <td>
+                <strong>${p.total?.toFixed(2) ?? "-"}</strong>
+              </td>
               <td>{p.vendedor ?? "-"}</td>
               <td>
                 <button
@@ -181,43 +195,44 @@ useEffect(() => {
             <h4>Productos del pedido</h4>
 
             {loadingItems && <div>Cargando productos...</div>}
+
             {!loadingItems && itemsPedido.length === 0 && (
               <div>No hay items asociados.</div>
             )}
+
             {!loadingItems && itemsPedido.length > 0 && (
-                <div className={styles.itemsContainer}>
+              <div className={styles.itemsContainer}>
+                <table className={styles.itemsTable}>
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Cant.</th>
+                      <th>Precio</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
 
-              <table className={styles.itemsTable}>
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
+                  <tbody>
+                    {itemsPedido.map((item) => {
+                      const precio =
+                        item.precio_oferta && item.precio_oferta > 0
+                          ? item.precio_oferta
+                          : item.precio_unitario;
 
-                <tbody>
-                  {itemsPedido.map((item) => {
-                    const precio =
-                      item.precio_oferta && item.precio_oferta > 0
-                        ? item.precio_oferta
-                        : item.precio_unitario;
-
-                    return (
-                      <tr key={item.id} className={styles.itemsRow}>
-                        <td className={styles.info}>{item.nombre_prod}</td>
-                        <td className={styles.info}>{item.cantidad}</td>
-                        <td className={styles.info}>{precio}</td>
-                        <td className={styles.info}>
-                          {item.cantidad * precio}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-                </div>
+                      return (
+                        <tr key={item.id} className={styles.itemsRow}>
+                          <td className={styles.info}>{item.nombre_prod}</td>
+                          <td className={styles.info}>{item.cantidad}</td>
+                          <td className={styles.info}>{precio}</td>
+                          <td className={styles.info}>
+                            {item.cantidad * precio}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             <button
