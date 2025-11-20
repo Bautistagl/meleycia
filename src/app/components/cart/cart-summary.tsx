@@ -57,7 +57,7 @@ export default function CartSummary({
     <div className={styles.summary}>
       <div className={styles.summaryContent}>
         <div className={`${styles.summaryRow} ${styles.totalRow}`}>
-          <span>Total</span>
+          <span>Total (sin IVA)</span>
           <span>${total.toFixed(2)}</span>
         </div>
 

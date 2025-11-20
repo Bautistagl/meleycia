@@ -51,7 +51,9 @@ if (!mounted) return null;
       router.push("/login");
     }
   };
-
+  const goToProductos = () => {
+    router.replace("/productos");
+  };
   const mail = localStorage.getItem("meleyciamail") ?? "";
   const esVendedor = mail.includes("@ventasmele.com");
 
@@ -73,7 +75,9 @@ if (!mounted) return null;
         <Link href="/productos" className={styles.navLink}>
           Productos
         </Link>
-
+        <Link href="/productos?view=ofertas" className={styles.navLink}>
+          Ofertas
+        </Link>
         {(admin || esVendedor) && (
           <Link href="/listadoPedidos" className={styles.navLink}>
             Pedidos

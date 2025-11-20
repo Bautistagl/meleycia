@@ -19,6 +19,7 @@ interface RegisterFormData {
   telefono: string;
   direccion: string;
   dni: string;
+  localidad: string;
 }
 
 const RegisterForm: React.FC = () => {
@@ -30,6 +31,7 @@ const RegisterForm: React.FC = () => {
     telefono: "",
     direccion: "",
     dni: "",
+    localidad: "",
   });
   const router = useRouter();
   const [formErrors, setFormErrors] = useState<Partial<RegisterFormData>>({});
@@ -72,7 +74,8 @@ const RegisterForm: React.FC = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const { email, password, nombre, telefono, direccion, dni } = formData;
+    const { email, password, nombre, telefono, direccion, dni, localidad } =
+      formData;
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -99,9 +102,10 @@ const RegisterForm: React.FC = () => {
         telefono,
         direccion,
         dni,
+        localidad,
         // LOGICA AGREGADA: Vendedor por defecto
-        vendedor: DEFAULT_VENDEDOR_NAME, 
-        telefono_vendedor: DEFAULT_VENDEDOR_PHONE, 
+        vendedor: DEFAULT_VENDEDOR_NAME,
+        telefono_vendedor: DEFAULT_VENDEDOR_PHONE,
       });
 
       if (insertError) {
@@ -139,7 +143,7 @@ const RegisterForm: React.FC = () => {
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           <div className={styles.inputGroup}>
             <label htmlFor="nombre" className={styles.label}>
-              Nombre
+              Nombre Completo / Razon Social
             </label>
             <input
               type="text"
@@ -174,7 +178,7 @@ const RegisterForm: React.FC = () => {
           </div>
           <div className={styles.inputGroup}>
             <label htmlFor="dni" className={styles.label}>
-              DNI
+              DNI / CUIT
             </label>
             <input
               type="tel"
@@ -190,7 +194,7 @@ const RegisterForm: React.FC = () => {
           </div>
           <div className={styles.inputGroup}>
             <label htmlFor="direccion" className={styles.label}>
-              Dirección
+              Dirección de entrega
             </label>
             <input
               type="tel"
@@ -199,6 +203,22 @@ const RegisterForm: React.FC = () => {
               onChange={(e) => handleInputChange("direccion", e.target.value)}
               className={styles.input}
               autoComplete="dir"
+            />
+            {formErrors.telefono && (
+              <span className={styles.fieldError}>{formErrors.telefono}</span>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <label htmlFor="Localidad" className={styles.label}>
+              Localidad
+            </label>
+            <input
+              type="loc"
+              id="localidad"
+              value={formData.localidad}
+              onChange={(e) => handleInputChange("direccion", e.target.value)}
+              className={styles.input}
+              autoComplete="loc"
             />
             {formErrors.telefono && (
               <span className={styles.fieldError}>{formErrors.telefono}</span>

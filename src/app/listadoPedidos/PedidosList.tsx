@@ -46,6 +46,10 @@ export default function PedidosList() {
   const [loadingItems, setLoadingItems] = useState(false);
 
   const [vendedorLocal, setVendedorLocal] = useState<string | null>(null);
+  const [vendedores, setVendedores] = useState<
+    { nombre: string; numero: number }[]
+  >([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // hook 1
@@ -56,9 +60,25 @@ export default function PedidosList() {
   // hook 2
   useEffect(() => {
     if (!mounted) return;
-    const mail = window.localStorage.getItem("meleyciamail");
-    setVendedorLocal(mail ? mail.split("@")[0].trim().toLowerCase() : "");
+
+    const mail = window.localStorage.getItem("meleyciamail") ?? "";
+    setVendedorLocal(mail.split("@")[0].trim().toLowerCase());
+    setIsAdmin(mail === "meleycia@admin.com");
   }, [mounted]);
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const fetchVendedores = async () => {
+      const { data } = await supabase
+        .from("vendedores")
+        .select("nombre, numero")
+        .order("nombre");
+
+      if (data) setVendedores(data);
+    };
+
+    fetchVendedores();
+  }, [isAdmin]);
 
   // hook 3
   useEffect(() => {
@@ -120,7 +140,58 @@ export default function PedidosList() {
       (p) => (p.vendedor ?? "").toLowerCase() === vendedorLocal
     );
   })();
+  const asignarVendedor = async (
+    pedidoId: number,
+    numero: number,
+    nombre: string
+  ) => {
+    await supabase
+      .from("pedidos")
+      .update({
+        numero_vendedor: numero,
+        vendedor: nombre.toLowerCase(),
+      })
+      .eq("id", pedidoId);
 
+    // refrescar pedidos
+    const { data } = await supabase
+      .from("pedidos")
+      .select(
+        `
+        *,
+        cliente:cliente_id (
+          nombre,
+          telefono,
+          direccion
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    if (data) setPedidos(data);
+  };
+  const actualizarEstado = async (pedidoId: number, nuevoEstado: string) => {
+    await supabase
+      .from("pedidos")
+      .update({ estado: nuevoEstado })
+      .eq("id", pedidoId);
+
+    const { data } = await supabase
+      .from("pedidos")
+      .select(
+        `
+        *,
+        cliente:cliente_id (
+          nombre,
+          telefono,
+          direccion
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    if (data) setPedidos(data);
+  };
   if (pedidosFiltrados.length === 0)
     return <div>No hay pedidos para este vendedor.</div>;
 
@@ -147,9 +218,39 @@ export default function PedidosList() {
             <tr key={p.id} className={styles.row}>
               <td>{p.id}</td>
               <td>{new Date(p.created_at).toLocaleString()}</td>
-              <td>{p.estado || "-"}</td>
+              <td>
+                <select
+                  value={p.estado ?? "Pendiente"}
+                  onChange={(e) => actualizarEstado(p.id, e.target.value)}
+                >
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Completado">Completado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+              </td>
+
               <td>{p.total?.toFixed(2) ?? "-"}</td>
-              <td>{p.vendedor ?? "-"}</td>
+              <td>
+                {isAdmin ? (
+                  <select
+                    value={p.numero_vendedor ?? ""}
+                    onChange={(e) => {
+                      const num = Number(e.target.value);
+                      const vend = vendedores.find((v) => v.numero === num);
+                      if (vend) asignarVendedor(p.id, vend.numero, vend.nombre);
+                    }}
+                  >
+                    <option value="">Sin asignar</option>
+                    {vendedores.map((v) => (
+                      <option key={v.numero} value={v.numero}>
+                        {v.nombre} ({v.numero})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  p.vendedor ?? "-"
+                )}
+              </td>
               <td>{p.cliente?.nombre ?? "-"}</td>
               <td>{p.cliente?.telefono ?? "-"}</td>
               <td>

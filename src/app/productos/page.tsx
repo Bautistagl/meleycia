@@ -9,6 +9,7 @@ import styles from "./products.module.css";
 import Navbar from "../components/landing/Navbar";
 import { supabase } from "@/lib/supabase";
 import { Producto } from "@/types";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type Combo = {
   id: number;
@@ -38,22 +39,11 @@ export default function ProductsPage() {
   const [admin, setAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const productsPerPage = 12;
   const ORDER_BY_COLUMN = "id";
-
-  const changeView = (view: CurrentView) => {
-    if (view === currentView) return;
-    setCurrentPage(1);
-    setTotalItems(0);
-    setSearchTerm("");
-    setFilters((prev) => ({
-      category: "",
-      brand: "",
-      inStockOnly: prev.inStockOnly,
-    }));
-    setCurrentView(view);
-  };
 
   const fetchData = useCallback(
     async (view: CurrentView) => {
@@ -110,18 +100,47 @@ export default function ProductsPage() {
       setTotalItems(count || 0);
       setIsLoading(false);
     },
-    [currentPage, searchTerm, filters, currentView]
+    [currentPage, searchTerm, filters]
   );
 
   useEffect(() => {
-    fetchData(currentView);
-  }, [fetchData]);
+    let finalView: CurrentView = "productos";
+    const viewParam = searchParams.get("view");
+
+    if (
+      viewParam === "productos" ||
+      viewParam === "combos" ||
+      viewParam === "ofertas"
+    ) {
+      finalView = viewParam as CurrentView;
+    }
+
+    setCurrentView(finalView);
+    fetchData(finalView);
+  }, [searchParams, fetchData]);
 
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
   }, [searchTerm, filters]);
+
+  const changeView = (view: CurrentView) => {
+    if (view === currentView) return;
+
+    setCurrentPage(1);
+    setTotalItems(0);
+    setSearchTerm("");
+    setFilters((prev) => ({
+      category: "",
+      brand: "",
+      inStockOnly: prev.inStockOnly,
+    }));
+
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set("view", view);
+    router.push(`/productos?${newSearchParams.toString()}`);
+  };
 
   const [brands, setBrands] = useState<
     { id: string | number; marca: string }[]
@@ -267,5 +286,4 @@ export default function ProductsPage() {
     </div>
   );
 }
-
 // Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css
