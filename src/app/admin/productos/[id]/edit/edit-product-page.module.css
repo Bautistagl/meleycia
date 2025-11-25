@@ -9,3 +9,12 @@
   font-weight: 700;
   color: #111827;
 }
+.volverButton{
+  color: black;
+  font-size: 1.2rem;
+}
+.volverButton:hover{
+  color: black;
+  font-size: 1.2rem;
+  font-weight: bold;
+}

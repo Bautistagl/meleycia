@@ -44,6 +44,17 @@ export default function ProductsPage() {
 
   const productsPerPage = 12;
   const ORDER_BY_COLUMN = "id";
+  const hasActiveFilters =
+    filters.category !== "" ||
+    filters.brand !== "" ||
+    filters.inStockOnly === true;
+  const clearFilters = () => {
+    setFilters({
+      category: "",
+      brand: "",
+      inStockOnly: false,
+    });
+  };
 
   const fetchData = useCallback(
     async (view: CurrentView) => {
@@ -259,21 +270,37 @@ export default function ProductsPage() {
           <p>Cargando {currentView}...</p>
         ) : (
           <div className={styles.productsGrid}>
-            {itemsToDisplay.length > 0 ? (
-              itemsToDisplay.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  admin={admin}
-                  isCombo={currentView === "combos"}
-                  producto={item as Producto}
-                />
-              ))
+            {itemsToDisplay.length > 0
+              ? itemsToDisplay.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    admin={admin}
+                    isCombo={currentView === "combos"}
+                    producto={item as Producto}
+                  />
+                ))
+              : ""}
+          </div>
+        )}
+        {itemsToDisplay.length === 0 && (
+          <div className={styles.noResultsBox}>
+            {hasActiveFilters ? (
+              <div>
+                <p className={styles.active}>
+                  No hay resultados con los filtros aplicados.
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className={styles.clearFiltersBtn}
+                >
+                  Limpiar filtros
+                </button>
+              </div>
             ) : (
               <p>No se encontraron resultados.</p>
             )}
           </div>
         )}
-
         {totalItems > productsPerPage && (
           <Pagination
             productsPerPage={productsPerPage}

@@ -1,8 +1,8 @@
-
-import Link from "next/link"
-import { Plus } from "lucide-react"
-import styles from "./products-page.module.css"
-import { ProductsTable } from "@/app/components/admin/products-table"
+// admin/productos/page.tsx
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import styles from "./products-page.module.css";
+import { ProductsTable } from "@/app/components/admin/products-table";
 
 export default function ProductsPage() {
   return (
@@ -15,5 +15,5 @@ export default function ProductsPage() {
       </div>
       <ProductsTable />
     </div>
-  )
+  );
 }

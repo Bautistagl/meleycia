@@ -1,20 +1,18 @@
+// admin/productos/[id]/edit/page.tsx
 import { ProductForm } from "@/app/components/admin/product-form";
 import styles from "./edit-product-page.module.css";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
-// Define an interface for the expected props of this page
-// params is now expected to be a Promise in Next.js 15 for Server Components
 interface EditProductPageProps {
-  params: Promise<{
-    id: string; // The 'id' from your dynamic route [id]
-  }>;
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string>>;
 }
 
-export default async function EditProductPage({
-  params,
-}: EditProductPageProps) {
-  // You MUST await params in Next.js 15 when using these async props
-  const { id } = await params;
+export default async function EditProductPage(props: EditProductPageProps) {
+  const { id } = await props.params;
+  const query = await props.searchParams;
+  const queryString = new URLSearchParams(query).toString();
 
   const { data: product, error } = await supabase
     .from("productos")
@@ -28,7 +26,14 @@ export default async function EditProductPage({
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Editar Productos</h1>
+      <h1 className={styles.title}>Editar Producto</h1>
+
+      <Link
+        className={styles.volverButton}
+        href={`/admin/productos?${queryString}`}
+      >
+        Volver
+      </Link>
 
       <ProductForm
         initialData={{

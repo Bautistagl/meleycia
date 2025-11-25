@@ -35,7 +35,7 @@
 }
 
 /* Estilo para el botón activo */
-.active h1 {
+.active h1, .active {
   /* 💡 CLAVE: Aplicar color negro (activo) directamente al H1 en el estado activo */
   color: #000; 
 }
@@ -66,7 +66,21 @@
   padding: 15px;
   border-radius: 5px;
 }
+.noResultsBox {
+  padding: 20px;
+  text-align: center;
+}
 
+.clearFiltersBtn {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  background: #f4f4f4;
+  cursor: pointer;
+}
+.clearFiltersBtn:hover {
+  background: #e2e2e2;
+}
 @media (min-width: 768px) {
   .toolsContainer {
     flex-direction: row;

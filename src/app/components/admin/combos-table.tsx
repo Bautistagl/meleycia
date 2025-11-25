@@ -35,9 +35,6 @@ export function CombosTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-
-
-
   // --- 2. Fetch de Productos (Paginación y Filtrado en Supabase) ---
   const fetchProductos = useCallback(async () => {
     setIsLoading(true);
@@ -58,7 +55,6 @@ export function CombosTable() {
         `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`
       );
     }
-
 
     // Aplicar la paginación (rango) y ejecutar
     const { data, error, count } = await query.range(from, to);
