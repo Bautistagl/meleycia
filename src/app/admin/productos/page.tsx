@@ -1,4 +1,6 @@
 "use client";
+
+import { Suspense } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import styles from "./products-page.module.css";
@@ -13,7 +15,10 @@ export default function ProductsPage() {
           <Plus className={styles.plusIcon} /> Agregar productos
         </Link>
       </div>
-      <ProductsTable />
+
+      <Suspense>
+        <ProductsTable />
+      </Suspense>
     </div>
   );
 }
