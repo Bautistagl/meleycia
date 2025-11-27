@@ -22,6 +22,17 @@ type Combo = {
 type DisplayItem = Producto | Combo;
 type CurrentView = "productos" | "combos" | "ofertas";
 
+function normalizeTerm(term: string) {
+  let t = term.toLowerCase().trim();
+
+  if (t.endsWith("es")) t = t.slice(0, -2);
+  else if (t.endsWith("s")) t = t.slice(0, -1);
+
+  if (/[aeiou]$/.test(t)) t = t.slice(0, -1);
+
+  return t;
+}
+
 export default function ProductsPage() {
   const [currentView, setCurrentView] = useState<CurrentView>("productos");
 
@@ -48,6 +59,7 @@ export default function ProductsPage() {
     filters.category !== "" ||
     filters.brand !== "" ||
     filters.inStockOnly === true;
+
   const clearFilters = () => {
     setFilters({
       category: "",
@@ -76,8 +88,10 @@ export default function ProductsPage() {
       }
 
       if (searchTerm) {
+        const stem = normalizeTerm(searchTerm);
+
         query = query.or(
-          `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
+          `nombre.ilike.%${stem}%,descripcion.ilike.%${stem}%,codigo.ilike.%${stem}%`
         );
       }
 
@@ -162,15 +176,13 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const fetchBrands = async () => {
-      const { data, error } = await supabase.from("marcas").select("id, marca");
-      if (!error) setBrands(data as any);
+      const { data } = await supabase.from("marcas").select("id, marca");
+      if (data) setBrands(data as any);
     };
 
     const fetchCategorias = async () => {
-      const { data, error } = await supabase
-        .from("categorias")
-        .select("id, nombre");
-      if (!error) setCategories(data as any);
+      const { data } = await supabase.from("categorias").select("id, nombre");
+      if (data) setCategories(data as any);
     };
 
     fetchCategorias();
@@ -313,4 +325,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
 // Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css

@@ -23,11 +23,22 @@ const formatMoney = (value: number | null): string => {
   });
 };
 
+// Normalización para búsquedas flexibles
+function normalizeTerm(term: string) {
+  let t = term.toLowerCase().trim();
+
+  if (t.endsWith("es")) t = t.slice(0, -2);
+  else if (t.endsWith("s")) t = t.slice(0, -1);
+
+  if (/[aeiou]$/.test(t)) t = t.slice(0, -1);
+
+  return t;
+}
+
 export function ProductsTable() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // CORREGIDO: SIEMPRE USAR searchParams.get(...)
   const initialPage = Number(searchParams.get("page") ?? 1);
   const initialSearch = searchParams.get("search") ?? "";
   const initialCategory = searchParams.get("category") ?? "";
@@ -35,12 +46,8 @@ export function ProductsTable() {
   const initialStock = searchParams.get("inStock") === "true";
 
   const [products, setProducts] = useState<Producto[]>([]);
-  const [brands, setBrands] = useState<
-    { id: string | number; marca: string }[]
-  >([]);
-  const [categories, setCategories] = useState<
-    { id: string | number; nombre: string }[]
-  >([]);
+  const [brands, setBrands] = useState<{ id: string | number; marca: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string | number; nombre: string }[]>([]);
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalProducts, setTotalProducts] = useState(0);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
@@ -90,11 +97,13 @@ export function ProductsTable() {
       .select("*", { count: "exact" })
       .order(ORDER_BY_COLUMN, { ascending: false });
 
-if (searchTerm) {
-  query = query.or(
-    `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
-  );
-}
+    if (searchTerm) {
+      const stem = normalizeTerm(searchTerm);
+
+      query = query.or(
+        `nombre.ilike.%${stem}%,descripcion.ilike.%${stem}%,codigo.ilike.%${stem}%`
+      );
+    }
 
     if (filters.category) query = query.eq("categoria", filters.category);
     if (filters.brand) query = query.eq("marca", filters.brand);
@@ -110,12 +119,14 @@ if (searchTerm) {
   useEffect(() => {
     fetchProductos();
   }, [fetchProductos]);
+
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
       updateUrl({ page: "1" });
     }
   }, [filters, searchTerm]);
+
   useEffect(() => {
     updateUrl();
   }, [currentPage, searchTerm, filters]);
@@ -182,9 +193,7 @@ if (searchTerm) {
                   <td>
                     <div className={styles.actions}>
                       <Link
-                        href={`/admin/productos/${
-                          product.id
-                        }/edit?${new URLSearchParams({
+                        href={`/admin/productos/${product.id}/edit?${new URLSearchParams({
                           page: currentPage.toString(),
                           search: searchTerm,
                           category: filters.category,
@@ -196,10 +205,7 @@ if (searchTerm) {
                         <Edit size={16} />
                       </Link>
 
-                      <DeleteConfirmDialog
-                        id={product.id}
-                        name={product.nombre}
-                      >
+                      <DeleteConfirmDialog id={product.id} name={product.nombre}>
                         <button className={styles.deleteButton}>
                           <Trash2 size={16} />
                         </button>
