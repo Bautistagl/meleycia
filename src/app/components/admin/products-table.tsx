@@ -90,11 +90,11 @@ export function ProductsTable() {
       .select("*", { count: "exact" })
       .order(ORDER_BY_COLUMN, { ascending: false });
 
-    if (searchTerm) {
-      query = query.or(
-        `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`
-      );
-    }
+if (searchTerm) {
+  query = query.or(
+    `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
+  );
+}
 
     if (filters.category) query = query.eq("categoria", filters.category);
     if (filters.brand) query = query.eq("marca", filters.brand);

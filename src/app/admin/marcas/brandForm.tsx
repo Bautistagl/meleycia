@@ -1,5 +1,3 @@
-// components/BrandUploadForm.tsx
-
 "use client";
 
 import type React from "react";
@@ -12,12 +10,14 @@ interface BrandUploadFormProps {
   onCancel?: () => void;
   id?: number;
   name?: string;
+  oldName?: string;
 }
 
 export default function BrandUploadForm({
   onCancel,
   id,
   name,
+  oldName,
 }: BrandUploadFormProps) {
   const [formData, setFormData] = useState<BrandFormData>({
     marca: name || "",
@@ -54,25 +54,28 @@ export default function BrandUploadForm({
     setSuccessMessage("");
 
     try {
-      let supabaseError;
-
       if (id) {
         const { error: updateError } = await supabase
           .from("marcas")
           .update({ marca: formData.marca })
           .eq("id", id);
 
-        supabaseError = updateError;
+        if (updateError) throw updateError;
+
+        if (oldName) {
+          const { error: propiedadesError } = await supabase
+            .from("productos")
+            .update({ marca: formData.marca })
+            .eq("marca", oldName);
+
+          if (propiedadesError) throw propiedadesError;
+        }
       } else {
         const { error: insertError } = await supabase
           .from("marcas")
           .insert([{ marca: formData.marca }]);
 
-        supabaseError = insertError;
-      }
-
-      if (supabaseError) {
-        throw supabaseError;
+        if (insertError) throw insertError;
       }
 
       setSuccessMessage(
@@ -106,9 +109,7 @@ export default function BrandUploadForm({
   };
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
+    if (onCancel) onCancel();
   };
 
   const formTitle = id ? "Editar Marca" : "Agregar Nueva Marca";

@@ -3,18 +3,13 @@ import { supabase } from "@/lib/supabase";
 
 import BrandUploadForm from "../../brandForm";
 
-// Define an interface for the expected props of this page
-// params is now expected to be a Promise in Next.js 15 for Server Components
 interface EditProductPageProps {
   params: Promise<{
-    id: string; // The 'id' from your dynamic route [id]
+    id: string;
   }>;
 }
 
-export default async function EditMarcaPage({
-  params,
-}: EditProductPageProps) {
-  // You MUST await params in Next.js 15 when using these async props
+export default async function EditMarcaPage({ params }: EditProductPageProps) {
   const { id } = await params;
 
   const { data: product, error } = await supabase
@@ -29,9 +24,11 @@ export default async function EditMarcaPage({
 
   return (
     <div className={styles.container}>
-
-
-<BrandUploadForm id={product.id} name={product.marca} />
+      <BrandUploadForm
+        id={product.id}
+        name={product.marca}
+        oldName={product.marca}
+      />
     </div>
   );
 }
