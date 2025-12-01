@@ -19,6 +19,12 @@ type Combo = {
   [key: string]: any;
 };
 
+interface FiltersState {
+  category: string;
+  brand: string;
+  inStockOnly: boolean;
+}
+
 type DisplayItem = Producto | Combo;
 type CurrentView = "productos" | "combos" | "ofertas";
 
@@ -38,10 +44,10 @@ export default function ProductsPage() {
 
   const [products, setProducts] = useState<Producto[]>([]);
   const [combos, setCombos] = useState<Combo[]>([]);
-
+  const [brandDetected, setBrandDetected] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FiltersState>({
     category: "",
     brand: "",
     inStockOnly: false,
@@ -50,23 +56,17 @@ export default function ProductsPage() {
   const [admin, setAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const productsPerPage = 12;
   const ORDER_BY_COLUMN = "id";
+
   const hasActiveFilters =
     filters.category !== "" ||
     filters.brand !== "" ||
     filters.inStockOnly === true;
-
-  const clearFilters = () => {
-    setFilters({
-      category: "",
-      brand: "",
-      inStockOnly: false,
-    });
-  };
 
   const fetchData = useCallback(
     async (view: CurrentView) => {
@@ -87,9 +87,9 @@ export default function ProductsPage() {
         query = query.gt("precio_oferta", 0);
       }
 
-      if (searchTerm) {
+      // Sólo aplicar búsqueda por texto si NO se detectó marca automáticamente
+      if (searchTerm && !brandDetected) {
         const stem = normalizeTerm(searchTerm);
-
         query = query.or(
           `nombre.ilike.%${stem}%,descripcion.ilike.%${stem}%,codigo.ilike.%${stem}%`
         );
@@ -99,57 +99,112 @@ export default function ProductsPage() {
         query = query.gt("stock", 0);
       }
 
-      if (view === "productos" || view === "ofertas") {
-        if (filters.category) {
-          query = query.ilike("categoria", filters.category);
-        }
-        if (filters.brand) {
-          query = query.ilike("marca", filters.brand);
-        }
+      if (view !== "combos") {
+        if (filters.category)
+          query = query.ilike("categoria", `%${filters.category}%`);
+        // usar patrón % para que ilike funcione como contains
+        if (filters.brand) query = query.ilike("marca", `%${filters.brand}%`);
       }
 
       const { data, error, count } = await query.range(from, to);
 
-      if (error) {
-        console.error("Error:", error.message);
-        setIsLoading(false);
-        return;
+      if (!error) {
+        if (view === "combos") setCombos(data as Combo[]);
+        else setProducts(data as Producto[]);
+        setTotalItems(count || 0);
       }
 
-      if (view === "productos" || view === "ofertas") {
-        setProducts(data as Producto[]);
-      } else {
-        setCombos(data as Combo[]);
-      }
-
-      setTotalItems(count || 0);
       setIsLoading(false);
     },
-    [currentPage, searchTerm, filters]
+    [currentPage, searchTerm, filters, brandDetected]
   );
 
   useEffect(() => {
-    let finalView: CurrentView = "productos";
     const viewParam = searchParams.get("view");
-
-    if (
+    const finalView =
       viewParam === "productos" ||
       viewParam === "combos" ||
       viewParam === "ofertas"
-    ) {
-      finalView = viewParam as CurrentView;
-    }
+        ? (viewParam as CurrentView)
+        : "productos";
 
     setCurrentView(finalView);
     fetchData(finalView);
   }, [searchParams, fetchData]);
 
   useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
+    const brandParam = searchParams.get("brand") || "";
+    const categoryParam = searchParams.get("category") || "";
+
+    setFilters((prev) => ({
+      ...prev,
+      brand: brandParam,
+      category: categoryParam,
+    }));
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (currentPage !== 1) setCurrentPage(1);
   }, [searchTerm, filters]);
 
+  const [brands, setBrands] = useState<
+    { id: string | number; marca: string }[]
+  >([]);
+  const [categories, setCategories] = useState<
+    { id: string | number; nombre: string }[]
+  >([]);
+
+  useEffect(() => {
+    supabase
+      .from("marcas")
+      .select("id, marca")
+      .then(({ data }) => data && setBrands(data));
+    supabase
+      .from("categorias")
+      .select("id, nombre")
+      .then(({ data }) => data && setCategories(data));
+  }, []);
+  useEffect(() => {
+    if (brands.length === 0) return;
+
+    // Si el campo de búsqueda está vacío, resetear detección automática (pero mantener filtro manual)
+    if (!searchTerm) {
+      setBrandDetected(false);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      const term = normalizeTerm(searchTerm);
+
+      // Preferir coincidencia exacta en normalized; si no, permitir startsWith para coincidencias parciales.
+      const matchedBrand = brands.find((b) => {
+        const n = normalizeTerm(b.marca);
+        return n === term || n.startsWith(term);
+      });
+
+      if (matchedBrand) {
+        // Activa el filtro de marca detectado automáticamente
+        setFilters((prev) => ({
+          ...prev,
+          brand: matchedBrand.marca,
+        }));
+        setBrandDetected(true);
+        // NO limpiamos searchTerm para evitar efectos secundarios y confusión
+      } else {
+        // Si ya había sido detectada una marca pero ahora el término no coincide, desactivar el flag
+        setBrandDetected(false);
+      }
+    }, 600); // debounce 600ms (ajustable)
+
+    return () => clearTimeout(handler);
+  }, [searchTerm, brands]);
+
+  // --- Resetear brandDetected si el usuario borra el filtro de marca manualmente ---
+  useEffect(() => {
+    if (!filters.brand) setBrandDetected(false);
+  }, [filters.brand]);
+
+  // --- Asegurarse de limpiar brandDetected al cambiar view o limpiar filtros ---
   const changeView = (view: CurrentView) => {
     if (view === currentView) return;
 
@@ -161,42 +216,27 @@ export default function ProductsPage() {
       brand: "",
       inStockOnly: prev.inStockOnly,
     }));
+    setBrandDetected(false);
 
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("view", view);
     router.push(`/productos?${newSearchParams.toString()}`);
   };
 
-  const [brands, setBrands] = useState<
-    { id: string | number; marca: string }[]
-  >([]);
-  const [categories, setCategories] = useState<
-    { id: string | number; nombre: string }[]
-  >([]);
-
-  useEffect(() => {
-    const fetchBrands = async () => {
-      const { data } = await supabase.from("marcas").select("id, marca");
-      if (data) setBrands(data as any);
-    };
-
-    const fetchCategorias = async () => {
-      const { data } = await supabase.from("categorias").select("id, nombre");
-      if (data) setCategories(data as any);
-    };
-
-    fetchCategorias();
-    fetchBrands();
-  }, []);
-
+  const clearFilters = () => {
+    setFilters({
+      category: "",
+      brand: "",
+      inStockOnly: false,
+    });
+    setBrandDetected(false);
+  };
   useEffect(() => {
     const mailCliente = localStorage.getItem("meleyciamail");
-    if (mailCliente == "meleycia@admin.com") {
-      setAdmin(true);
-    }
+    if (mailCliente == "meleycia@admin.com") setAdmin(true);
   }, []);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (page: number) => setCurrentPage(page);
 
   const itemsToDisplay =
     currentView === "productos"
@@ -294,6 +334,7 @@ export default function ProductsPage() {
               : ""}
           </div>
         )}
+
         {itemsToDisplay.length === 0 && (
           <div className={styles.noResultsBox}>
             {hasActiveFilters ? (
@@ -313,6 +354,7 @@ export default function ProductsPage() {
             )}
           </div>
         )}
+
         {totalItems > productsPerPage && (
           <Pagination
             productsPerPage={productsPerPage}
@@ -325,5 +367,6 @@ export default function ProductsPage() {
     </div>
   );
 }
+
 
 // Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css

@@ -13,7 +13,7 @@ interface BannerSectionProps {
 }
 
 const defaultBrands: Brand[] = [
-  { id: "1", name: "Arcor", logo: "/placeholder.svg?height=60&width=120" },
+  { id: "13", name: "Arcor", logo: "/placeholder.svg?height=60&width=120" },
   { id: "2", name: "Energizer", logo: "/placeholder.svg?height=60&width=120" },
   { id: "3", name: "Marlboro", logo: "/placeholder.svg?height=60&width=120" },
   { id: "4", name: "Rayovac", logo: "/placeholder.svg?height=60&width=120" },

@@ -224,7 +224,7 @@ export default function PedidosList() {
                   onChange={(e) => actualizarEstado(p.id, e.target.value)}
                 >
                   <option value="Pendiente">Pendiente</option>
-                  <option value="Completado">Completado</option>
+                  <option value="Completo">Completo</option>
                   <option value="Cancelado">Cancelado</option>
                 </select>
               </td>
