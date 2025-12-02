@@ -57,7 +57,7 @@ export function ProductsTable() {
     inStockOnly: initialStock,
   });
   const [isLoading, setIsLoading] = useState(true);
-
+  const [brandDetected, setBrandDetected] = useState(false);
   const updateUrl = (changes = {}) => {
     const params = new URLSearchParams({
       page: currentPage.toString(),
@@ -85,6 +85,38 @@ export function ProductsTable() {
     fetchCategorias();
     fetchBrands();
   }, []);
+  useEffect(() => {
+    if (brands.length === 0) return;
+
+    if (!searchTerm) {
+      setBrandDetected(false);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      const term = normalizeTerm(searchTerm);
+
+      const matchedBrand = brands.find((b) => {
+        const n = normalizeTerm(b.marca);
+        return n === term || n.startsWith(term);
+      });
+
+      if (matchedBrand) {
+        setFilters((prev) => ({
+          ...prev,
+          brand: matchedBrand.marca,
+        }));
+        setBrandDetected(true);
+      } else {
+        setBrandDetected(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [searchTerm, brands]);
+  useEffect(() => {
+    if (!filters.brand) setBrandDetected(false);
+  }, [filters.brand]);
 
   const fetchProductos = useCallback(async () => {
     setIsLoading(true);
@@ -96,10 +128,8 @@ export function ProductsTable() {
       .from("productos")
       .select("*", { count: "exact" })
       .order(ORDER_BY_COLUMN, { ascending: false });
-
-    if (searchTerm) {
+    if (searchTerm && !brandDetected) {
       const stem = normalizeTerm(searchTerm);
-
       query = query.or(
         `nombre.ilike.%${stem}%,descripcion.ilike.%${stem}%,codigo.ilike.%${stem}%`
       );
