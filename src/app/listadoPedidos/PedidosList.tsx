@@ -307,6 +307,7 @@ export default function PedidosList() {
                     <tr>
                       <th>Producto</th>
                       <th>Cant.</th>
+                      <th>Codigo</th>
                       <th>Precio</th>
                       <th>Total</th>
                     </tr>
@@ -323,6 +324,7 @@ export default function PedidosList() {
                         <tr key={item.id} className={styles.itemsRow}>
                           <td className={styles.info}>{item.nombre_prod}</td>
                           <td className={styles.info}>{item.cantidad}</td>
+                          <td className={styles.info}>{item.codigo}</td>
                           <td className={styles.info}>{precio}</td>
                           <td className={styles.info}>
                             {item.cantidad * precio}

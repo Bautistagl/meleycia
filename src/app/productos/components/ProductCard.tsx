@@ -232,6 +232,27 @@ export function ProductCard({
                 <strong> {producto.descripcion}</strong>
               </h2>
             </div>
+            {/* {stockEnabled && (
+              <div className={styles.actionsContainer}>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isLoading} // Deshabilitar mientras carga
+                  className={styles.addButton}
+                >
+                  {isLoading ? "Añadiendo..." : "Añadir Producto"}
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) =>
+                    setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                  }
+                  className={styles.quantityInput}
+                  disabled={isLoading} // Deshabilitar mientras carga
+                />
+              </div>
+            )} */}
           </div>
         </div>
       ) : (

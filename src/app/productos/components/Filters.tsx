@@ -33,12 +33,14 @@ export function Filters({
     }));
   };
 
-  const handleBrandChange = (value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      brand: value,
-    }));
-  };
+const handleBrandChange = (value: string) => {
+  const b = brands.find((x) => x.marca.toLowerCase() === value.toLowerCase());
+  setFilters((prev) => ({
+    ...prev,
+    brand: b ? b.marca : value,   // siempre guarda la marca EXACTA como está en la BD
+  }));
+};
+
 
   const clearFilters = () => {
     setFilters({
@@ -104,3 +106,9 @@ export function Filters({
     </div>
   );
 }
+  // const handleBrandChange = (value: string) => {
+  //   setFilters((prev) => ({
+  //     ...prev,
+  //     brand: value,
+  //   }));
+  // };

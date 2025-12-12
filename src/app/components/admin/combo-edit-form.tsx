@@ -42,7 +42,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     price: initialData?.price || 0,
-    stock: initialData?.stock || 1,
+    stock: initialData?.stock || false,
     descripcion: initialData?.descripcion || "",
     imageUrl: initialData?.imageUrl || "",
     codigo: initialData?.codigo || "",
@@ -57,7 +57,6 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
   const [formattedPrice, setFormattedPrice] = useState(
     formatMoney(initialData?.price || 0)
   );
-
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -102,13 +101,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const {
-      name,
-      price,
-      stock,
-      descripcion,
-      codigo,
-    } = formData;
+    const { name, price, stock, descripcion, codigo } = formData;
 
     let finalImageUrl: string | null = null;
 
@@ -128,7 +121,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
         .update({
           nombre: name,
           precio: price,
-          stock: stock > 0, // Asegura que se guarde como booleano
+          stock: stock, // Asegura que se guarde como booleano
           descripcion: descripcion,
           imageUrl: finalImageUrl,
           codigo: codigo,
@@ -246,11 +239,11 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
               <select
                 id="stock"
                 className={styles.select}
-                value={formData.stock > 0 ? "true" : "false"}
+                value={formData.stock}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    stock: e.target.value === "true" ? 1 : 0,
+                    stock: e.target.value === "true" ? true : false,
                   })
                 }
               >
