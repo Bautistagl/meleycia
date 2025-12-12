@@ -11,7 +11,7 @@ interface ProductFormProps {
     id?: string;
     name?: string;
     price?: number;
-    stock?: number;
+    stock?: boolean;
     descripcion?: string;
     imageUrl?: string;
     codigo?: string;
@@ -163,7 +163,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
       setFormData({
         name: "",
         price: 0,
-        stock: 1,
+        stock: true,
         descripcion: "",
         imageUrl: "",
         codigo: "",
@@ -239,7 +239,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
               <select
                 id="stock"
                 className={styles.select}
-                value={formData.stock}
+                value={formData.stock.toString()}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
