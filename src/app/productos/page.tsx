@@ -88,10 +88,9 @@ export default function ProductsPage() {
       }
 
       // Sólo aplicar búsqueda por texto si NO se detectó marca automáticamente
-      if (searchTerm && !brandDetected) {
-        const stem = normalizeTerm(searchTerm);
+      if (searchTerm) {
         query = query.or(
-          `nombre.ilike.%${stem}%,descripcion.ilike.%${stem}%,codigo.ilike.%${stem}%`
+          `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
         );
       }
 
@@ -164,40 +163,40 @@ export default function ProductsPage() {
       .select("id, nombre")
       .then(({ data }) => data && setCategories(data));
   }, []);
-  useEffect(() => {
-    if (brands.length === 0) return;
+  // useEffect(() => {
+  //   if (brands.length === 0) return;
 
-    // Si el campo de búsqueda está vacío, resetear detección automática (pero mantener filtro manual)
-    if (!searchTerm) {
-      setBrandDetected(false);
-      return;
-    }
+  //   // Si el campo de búsqueda está vacío, resetear detección automática (pero mantener filtro manual)
+  //   if (!searchTerm) {
+  //     setBrandDetected(false);
+  //     return;
+  //   }
 
-    const handler = setTimeout(() => {
-      const term = normalizeTerm(searchTerm);
+  //   const handler = setTimeout(() => {
+  //     const term = normalizeTerm(searchTerm);
 
-      // Preferir coincidencia exacta en normalized; si no, permitir startsWith para coincidencias parciales.
-      const matchedBrand = brands.find((b) => {
-        const n = normalizeTerm(b.marca);
-        return n === term || n.startsWith(term);
-      });
+  //     // Preferir coincidencia exacta en normalized; si no, permitir startsWith para coincidencias parciales.
+  //     const matchedBrand = brands.find((b) => {
+  //       const n = normalizeTerm(b.marca);
+  //       return n === term || n.startsWith(term);
+  //     });
 
-      if (matchedBrand) {
-        // Activa el filtro de marca detectado automáticamente
-        setFilters((prev) => ({
-          ...prev,
-          brand: matchedBrand.marca,
-        }));
-        setBrandDetected(true);
-        // NO limpiamos searchTerm para evitar efectos secundarios y confusión
-      } else {
-        // Si ya había sido detectada una marca pero ahora el término no coincide, desactivar el flag
-        setBrandDetected(false);
-      }
-    }, 600); // debounce 600ms (ajustable)
+  //     if (matchedBrand) {
+  //       // Activa el filtro de marca detectado automáticamente
+  //       setFilters((prev) => ({
+  //         ...prev,
+  //         brand: matchedBrand.marca,
+  //       }));
+  //       setBrandDetected(true);
+  //       // NO limpiamos searchTerm para evitar efectos secundarios y confusión
+  //     } else {
+  //       // Si ya había sido detectada una marca pero ahora el término no coincide, desactivar el flag
+  //       setBrandDetected(false);
+  //     }
+  //   }, 600); // debounce 600ms (ajustable)
 
-    return () => clearTimeout(handler);
-  }, [searchTerm, brands]);
+  //   return () => clearTimeout(handler);
+  // }, [searchTerm, brands]);
 
   // --- Resetear brandDetected si el usuario borra el filtro de marca manualmente ---
   useEffect(() => {
