@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { Search } from "./components/Search";
@@ -16,6 +16,8 @@ type Combo = {
   nombre: string;
   descripcion: string;
   precio: number;
+  precio_oferta?: number;
+  stock?: number;
   [key: string]: any;
 };
 
@@ -25,28 +27,19 @@ interface FiltersState {
   inStockOnly: boolean;
 }
 
-type DisplayItem = Producto | Combo;
-type CurrentView = "productos" | "combos" | "ofertas";
+type CurrentView = "productos" | "ofertas";
 
-function normalizeTerm(term: string) {
-  let t = term.toLowerCase().trim();
-
-  if (t.endsWith("es")) t = t.slice(0, -2);
-  else if (t.endsWith("s")) t = t.slice(0, -1);
-
-  if (/[aeiou]$/.test(t)) t = t.slice(0, -1);
-
-  return t;
-}
+type DisplayItem =
+  | (Producto & { __type: "producto" })
+  | (Combo & { __type: "combo" });
 
 export default function ProductsPage() {
   const [currentView, setCurrentView] = useState<CurrentView>("productos");
 
-  const [products, setProducts] = useState<Producto[]>([]);
-  const [combos, setCombos] = useState<Combo[]>([]);
-  const [brandDetected, setBrandDetected] = useState(false);
+  const [items, setItems] = useState<DisplayItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+
   const [filters, setFilters] = useState<FiltersState>({
     category: "",
     brand: "",
@@ -75,57 +68,63 @@ export default function ProductsPage() {
       const from = (currentPage - 1) * productsPerPage;
       const to = from + productsPerPage - 1;
 
-      let tableName = "productos";
-      if (view === "combos") tableName = "combos";
+      if (view === "productos") {
+        let query = supabase
+          .from("productos")
+          .select("*", { count: "exact" })
+          .order(ORDER_BY_COLUMN, { ascending: false });
 
-      let query = supabase
-        .from(tableName)
-        .select("*", { count: "exact" })
-        .order(ORDER_BY_COLUMN, { ascending: false });
+        if (searchTerm) {
+          query = query.or(
+            `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
+          );
+        }
 
-      if (view === "ofertas") {
-        query = query.gt("precio_oferta", 0);
-      }
-
-      // Sólo aplicar búsqueda por texto si NO se detectó marca automáticamente
-      if (searchTerm) {
-        query = query.or(
-          `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
-        );
-      }
-
-      if (filters.inStockOnly) {
-        query = query.gt("stock", 0);
-      }
-
-      if (view !== "combos") {
+        if (filters.inStockOnly) query = query.gt("stock", 0);
         if (filters.category)
           query = query.ilike("categoria", `%${filters.category}%`);
-        // usar patrón % para que ilike funcione como contains
         if (filters.brand) query = query.ilike("marca", `%${filters.brand}%`);
-      }
 
-      const { data, error, count } = await query.range(from, to);
+        const { data, count } = await query.range(from, to);
 
-      if (!error) {
-        if (view === "combos") setCombos(data as Combo[]);
-        else setProducts(data as Producto[]);
+        setItems((data || []).map((p) => ({ ...p, __type: "producto" })));
         setTotalItems(count || 0);
+        setIsLoading(false);
+        return;
       }
 
+      // --- OFERTAS (productos + combos) ---
+      const [prodRes, comboRes] = await Promise.all([
+        supabase.from("productos").select("*").gt("precio_oferta", 0),
+        supabase.from("combos").select("*"),
+      ]);
+
+      let merged: DisplayItem[] = [
+        ...(prodRes.data || []).map((p) => ({
+          ...p,
+          __type: "producto",
+        })),
+        ...(comboRes.data || []).map((c) => ({
+          ...c,
+          __type: "combo",
+        })),
+      ];
+
+      if (filters.inStockOnly) {
+        merged = merged.filter((i) => Number(i.stock) > 0);
+      }
+
+      setItems(merged.slice(from, to + 1));
+      setTotalItems(merged.length);
       setIsLoading(false);
     },
-    [currentPage, searchTerm, filters, brandDetected]
+    [currentPage, searchTerm, filters]
   );
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
-    const finalView =
-      viewParam === "productos" ||
-      viewParam === "combos" ||
-      viewParam === "ofertas"
-        ? (viewParam as CurrentView)
-        : "productos";
+    const finalView: CurrentView =
+      viewParam === "ofertas" ? "ofertas" : "productos";
 
     setCurrentView(finalView);
     fetchData(finalView);
@@ -144,7 +143,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (currentPage !== 1) setCurrentPage(1);
-  }, [searchTerm, filters]);
+  }, [searchTerm, filters, currentView]);
 
   const [brands, setBrands] = useState<
     { id: string | number; marca: string }[]
@@ -158,64 +157,23 @@ export default function ProductsPage() {
       .from("marcas")
       .select("id, marca")
       .then(({ data }) => data && setBrands(data));
+
     supabase
       .from("categorias")
       .select("id, nombre")
       .then(({ data }) => data && setCategories(data));
   }, []);
-  // useEffect(() => {
-  //   if (brands.length === 0) return;
 
-  //   // Si el campo de búsqueda está vacío, resetear detección automática (pero mantener filtro manual)
-  //   if (!searchTerm) {
-  //     setBrandDetected(false);
-  //     return;
-  //   }
-
-  //   const handler = setTimeout(() => {
-  //     const term = normalizeTerm(searchTerm);
-
-  //     // Preferir coincidencia exacta en normalized; si no, permitir startsWith para coincidencias parciales.
-  //     const matchedBrand = brands.find((b) => {
-  //       const n = normalizeTerm(b.marca);
-  //       return n === term || n.startsWith(term);
-  //     });
-
-  //     if (matchedBrand) {
-  //       // Activa el filtro de marca detectado automáticamente
-  //       setFilters((prev) => ({
-  //         ...prev,
-  //         brand: matchedBrand.marca,
-  //       }));
-  //       setBrandDetected(true);
-  //       // NO limpiamos searchTerm para evitar efectos secundarios y confusión
-  //     } else {
-  //       // Si ya había sido detectada una marca pero ahora el término no coincide, desactivar el flag
-  //       setBrandDetected(false);
-  //     }
-  //   }, 600); // debounce 600ms (ajustable)
-
-  //   return () => clearTimeout(handler);
-  // }, [searchTerm, brands]);
-
-  // --- Resetear brandDetected si el usuario borra el filtro de marca manualmente ---
-  useEffect(() => {
-    if (!filters.brand) setBrandDetected(false);
-  }, [filters.brand]);
-
-  // --- Asegurarse de limpiar brandDetected al cambiar view o limpiar filtros ---
   const changeView = (view: CurrentView) => {
     if (view === currentView) return;
 
     setCurrentPage(1);
-    setTotalItems(0);
     setSearchTerm("");
-    setFilters((prev) => ({
+    setFilters({
       category: "",
       brand: "",
-      inStockOnly: prev.inStockOnly,
-    }));
-    setBrandDetected(false);
+      inStockOnly: false,
+    });
 
     const newSearchParams = new URLSearchParams(searchParams.toString());
     newSearchParams.set("view", view);
@@ -228,23 +186,14 @@ export default function ProductsPage() {
       brand: "",
       inStockOnly: false,
     });
-    setBrandDetected(false);
   };
+
   useEffect(() => {
     const mailCliente = localStorage.getItem("meleyciamail");
-    if (mailCliente == "meleycia@admin.com") setAdmin(true);
+    if (mailCliente === "meleycia@admin.com") setAdmin(true);
   }, []);
 
   const paginate = (page: number) => setCurrentPage(page);
-
-  const itemsToDisplay =
-    currentView === "productos"
-      ? products
-      : currentView === "combos"
-      ? combos
-      : products;
-
-  const currentItemCount = itemsToDisplay.length;
 
   return (
     <div>
@@ -259,15 +208,6 @@ export default function ProductsPage() {
             }`}
           >
             <h1>Productos</h1>
-          </button>
-
-          <button
-            onClick={() => changeView("combos")}
-            className={`${styles.headerButton} ${
-              currentView === "combos" ? styles.active : ""
-            }`}
-          >
-            <h1>Combos</h1>
           </button>
 
           <button
@@ -294,14 +234,11 @@ export default function ProductsPage() {
                   inStockOnly: e.target.checked,
                 }))
               }
-              style={{ marginRight: "8px", transform: "scale(1.2)" }}
             />
-            <label htmlFor="inStockOnly" style={{ whiteSpace: "nowrap" }}>
-              Solo en Stock
-            </label>
+            <label htmlFor="inStockOnly">Solo en Stock</label>
           </div>
 
-          {currentView !== "combos" && (
+          {currentView === "productos" && (
             <Filters
               categories={categories}
               brands={brands}
@@ -313,7 +250,7 @@ export default function ProductsPage() {
 
         <div className={styles.resultsInfo}>
           <span>
-            Mostrando {currentItemCount} de {totalItems} {currentView}
+            Mostrando {items.length} de {totalItems} {currentView}
           </span>
         </div>
 
@@ -321,20 +258,18 @@ export default function ProductsPage() {
           <p>Cargando {currentView}...</p>
         ) : (
           <div className={styles.productsGrid}>
-            {itemsToDisplay.length > 0
-              ? itemsToDisplay.map((item) => (
-                  <ProductCard
-                    key={item.id}
-                    admin={admin}
-                    isCombo={currentView === "combos"}
-                    producto={item as Producto}
-                  />
-                ))
-              : ""}
+            {items.map((item) => (
+              <ProductCard
+                key={`${item.__type}-${item.id}`}
+                admin={admin}
+                isCombo={item.__type === "combo"}
+                producto={item as Producto}
+              />
+            ))}
           </div>
         )}
 
-        {itemsToDisplay.length === 0 && (
+        {items.length === 0 && (
           <div className={styles.noResultsBox}>
             {hasActiveFilters ? (
               <div>
@@ -366,6 +301,5 @@ export default function ProductsPage() {
     </div>
   );
 }
-
 
 // Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css
