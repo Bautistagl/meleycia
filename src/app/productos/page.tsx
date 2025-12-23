@@ -35,10 +35,11 @@ type DisplayItem =
 
 export default function ProductsPage() {
   const [currentView, setCurrentView] = useState<CurrentView>("productos");
-
   const [items, setItems] = useState<DisplayItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   const [filters, setFilters] = useState<FiltersState>({
     category: "",
@@ -61,6 +62,36 @@ export default function ProductsPage() {
     filters.brand !== "" ||
     filters.inStockOnly === true;
 
+  const [brands, setBrands] = useState<
+    { id: string | number; marca: string }[]
+  >([]);
+
+  const [categories, setCategories] = useState<
+    { id: string | number; nombre: string }[]
+  >([]);
+
+  const normalize = (v: string) =>
+    v
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+
+  const detectBrandFromSearch = (term: string) => {
+    if (!term) return "";
+    const nTerm = normalize(term);
+    const match = brands.find((b) => normalize(b.marca) === nTerm);
+    return match ? match.marca : "";
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
   const fetchData = useCallback(
     async (view: CurrentView) => {
       setIsLoading(true);
@@ -74,9 +105,13 @@ export default function ProductsPage() {
           .select("*", { count: "exact" })
           .order(ORDER_BY_COLUMN, { ascending: false });
 
-        if (searchTerm) {
+        const detectedBrand = detectBrandFromSearch(debouncedSearchTerm);
+
+        if (detectedBrand) {
+          query = query.eq("marca", detectedBrand);
+        } else if (debouncedSearchTerm) {
           query = query.or(
-            `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,codigo.ilike.%${searchTerm}%`
+            `nombre.ilike.%${debouncedSearchTerm}%,descripcion.ilike.%${debouncedSearchTerm}%,codigo.ilike.%${debouncedSearchTerm}%`
           );
         }
 
@@ -93,21 +128,14 @@ export default function ProductsPage() {
         return;
       }
 
-      // --- OFERTAS (productos + combos) ---
       const [prodRes, comboRes] = await Promise.all([
         supabase.from("productos").select("*").gt("precio_oferta", 0),
         supabase.from("combos").select("*"),
       ]);
 
       let merged: DisplayItem[] = [
-        ...(prodRes.data || []).map((p) => ({
-          ...p,
-          __type: "producto",
-        })),
-        ...(comboRes.data || []).map((c) => ({
-          ...c,
-          __type: "combo",
-        })),
+        ...(prodRes.data || []).map((p) => ({ ...p, __type: "producto" })),
+        ...(comboRes.data || []).map((c) => ({ ...c, __type: "combo" })),
       ];
 
       if (filters.inStockOnly) {
@@ -118,17 +146,19 @@ export default function ProductsPage() {
       setTotalItems(merged.length);
       setIsLoading(false);
     },
-    [currentPage, searchTerm, filters]
+    [currentPage, debouncedSearchTerm, filters, brands, productsPerPage]
   );
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
     const finalView: CurrentView =
       viewParam === "ofertas" ? "ofertas" : "productos";
-
     setCurrentView(finalView);
-    fetchData(finalView);
-  }, [searchParams, fetchData]);
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchData(currentView);
+  }, [currentView, fetchData]);
 
   useEffect(() => {
     const brandParam = searchParams.get("brand") || "";
@@ -143,14 +173,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (currentPage !== 1) setCurrentPage(1);
-  }, [searchTerm, filters, currentView]);
-
-  const [brands, setBrands] = useState<
-    { id: string | number; marca: string }[]
-  >([]);
-  const [categories, setCategories] = useState<
-    { id: string | number; nombre: string }[]
-  >([]);
+  }, [debouncedSearchTerm, filters, currentView]);
 
   useEffect(() => {
     supabase
@@ -301,5 +324,6 @@ export default function ProductsPage() {
     </div>
   );
 }
+
 
 // Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css

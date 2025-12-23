@@ -52,94 +52,55 @@ export default function PedidosList() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // hook 1
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  // hook 2
   useEffect(() => {
     if (!mounted) return;
-
     const mail = window.localStorage.getItem("meleyciamail") ?? "";
     setVendedorLocal(mail.split("@")[0].trim().toLowerCase());
     setIsAdmin(mail === "meleycia@admin.com");
   }, [mounted]);
+
   useEffect(() => {
     if (!isAdmin) return;
-
-    const fetchVendedores = async () => {
-      const { data } = await supabase
-        .from("vendedores")
-        .select("nombre, numero")
-        .order("nombre");
-
-      if (data) setVendedores(data);
-    };
-
-    fetchVendedores();
+    supabase
+      .from("vendedores")
+      .select("nombre, numero")
+      .order("nombre")
+      .then(({ data }) => data && setVendedores(data));
   }, [isAdmin]);
 
-  // hook 3
   useEffect(() => {
-    const fetchPedidos = async () => {
-      const { data } = await supabase
-        .from("pedidos")
-        .select(
-          `
-            *,
-            cliente:cliente_id (
-              nombre,
-              telefono,
-              direccion
-            )
-          `
-        )
-        .order("created_at", { ascending: false });
-
-      if (data) setPedidos(data);
-      setLoading(false);
-    };
-
-    fetchPedidos();
+    supabase
+      .from("pedidos")
+      .select(`*, cliente:cliente_id (nombre, telefono, direccion)`)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setPedidos(data);
+        setLoading(false);
+      });
   }, []);
 
-  // Corte único después de todos los hooks
   if (!mounted) return null;
-  const cargarItemsPedido = async (pedido: Pedido) => {
-    setLoadingItems(true);
-
-    const { data } = await supabase
-      .from("pedido_items")
-      .select("*")
-      .eq("pedido_id", pedido.id);
-
-    if (data) setItemsPedido(data);
-    setLoadingItems(false);
-  };
-
-  const abrirDetalles = async (pedido: Pedido) => {
-    setPedidoSeleccionado(pedido);
-    await cargarItemsPedido(pedido);
-  };
-
-  if (!mounted) return null;
-
   if (loading) return <div>Cargando pedidos...</div>;
 
   const pedidosFiltrados = (() => {
-    if (!vendedorLocal) return [];
-
     const mail = window.localStorage.getItem("meleyciamail") ?? "";
-
-    if (mail === "meleycia@admin.com") {
+    if (mail === "meleycia@admin.com")
       return pedidos.filter((p) => p.numero_vendedor === 1);
-    }
-
     return pedidos.filter(
       (p) => (p.vendedor ?? "").toLowerCase() === vendedorLocal
     );
   })();
+
+  const actualizarEstado = async (id: number, estado: string) => {
+    await supabase.from("pedidos").update({ estado }).eq("id", id);
+    const { data } = await supabase
+      .from("pedidos")
+      .select(`*, cliente:cliente_id (nombre, telefono, direccion)`)
+      .order("created_at", { ascending: false });
+    if (data) setPedidos(data);
+  };
   const asignarVendedor = async (
     pedidoId: number,
     numero: number,
@@ -147,53 +108,21 @@ export default function PedidosList() {
   ) => {
     await supabase
       .from("pedidos")
-      .update({
-        numero_vendedor: numero,
-        vendedor: nombre.toLowerCase(),
-      })
+      .update({ numero_vendedor: numero, vendedor: nombre.toLowerCase() })
       .eq("id", pedidoId);
-
-    // refrescar pedidos
-    const { data } = await supabase
-      .from("pedidos")
-      .select(
-        `
-        *,
-        cliente:cliente_id (
-          nombre,
-          telefono,
-          direccion
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (data) setPedidos(data);
   };
-  const actualizarEstado = async (pedidoId: number, nuevoEstado: string) => {
-    await supabase
-      .from("pedidos")
-      .update({ estado: nuevoEstado })
-      .eq("id", pedidoId);
-
+  const abrirDetalles = async (pedido: Pedido) => {
+    setPedidoSeleccionado(pedido);
+    setLoadingItems(true);
     const { data } = await supabase
-      .from("pedidos")
-      .select(
-        `
-        *,
-        cliente:cliente_id (
-          nombre,
-          telefono,
-          direccion
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (data) setPedidos(data);
+      .from("pedido_items")
+      .select("*")
+      .eq("pedido_id", pedido.id);
+    if (data) setItemsPedido(data);
+    setLoadingItems(false);
   };
-  if (pedidosFiltrados.length === 0)
-    return <div>No hay pedidos para este vendedor.</div>;
+
+  if (pedidosFiltrados.length === 0) return <div>No hay pedidos.</div>;
 
   return (
     <div className={styles.wrapper}>
@@ -216,9 +145,13 @@ export default function PedidosList() {
         <tbody>
           {pedidosFiltrados.map((p) => (
             <tr key={p.id} className={styles.row}>
-              <td>{p.id}</td>
-              <td>{new Date(p.created_at).toLocaleString()}</td>
-              <td>
+              <td data-label="ID">
+                <div>{p.id}</div>
+              </td>
+              <td data-label="Fecha">
+                <div>{new Date(p.created_at).toLocaleString()}</div>
+              </td>
+              <td data-label="Estado">
                 <select
                   value={p.estado ?? "Pendiente"}
                   onChange={(e) => actualizarEstado(p.id, e.target.value)}
@@ -228,9 +161,11 @@ export default function PedidosList() {
                   <option value="Cancelado">Cancelado</option>
                 </select>
               </td>
-
-              <td>{p.total?.toFixed(2) ?? "-"}</td>
+              <td data-label="Total">
+                <div>{p.total?.toFixed(2) ?? "-"}</div>
+              </td>
               <td>
+                {" "}
                 {isAdmin ? (
                   <select
                     value={p.numero_vendedor ?? ""}
@@ -240,20 +175,26 @@ export default function PedidosList() {
                       if (vend) asignarVendedor(p.id, vend.numero, vend.nombre);
                     }}
                   >
-                    <option value="">Sin asignar</option>
+                    {" "}
+                    <option value="">Sin asignar</option>{" "}
                     {vendedores.map((v) => (
                       <option key={v.numero} value={v.numero}>
-                        {v.nombre} ({v.numero})
+                        {" "}
+                        {v.nombre} ({v.numero}){" "}
                       </option>
-                    ))}
+                    ))}{" "}
                   </select>
                 ) : (
                   p.vendedor ?? "-"
-                )}
+                )}{" "}
               </td>
-              <td>{p.cliente?.nombre ?? "-"}</td>
-              <td>{p.cliente?.telefono ?? "-"}</td>
-              <td>
+              <td data-label="Cliente">
+                <div>{p.cliente?.nombre ?? "-"}</div>
+              </td>
+              <td data-label="Teléfono">
+                <div>{p.cliente?.telefono ?? "-"}</div>
+              </td>
+              <td data-label="Acciones">
                 <button
                   className={styles.btnDetalles}
                   onClick={() => abrirDetalles(p)}
@@ -276,43 +217,36 @@ export default function PedidosList() {
               {new Date(pedidoSeleccionado.created_at).toLocaleString()}
             </p>
             <p className={styles.info}>
-              <strong>Estado:</strong> {pedidoSeleccionado.estado || "-"}
-            </p>
-
-            <p className={styles.info}>
-              <strong>Total:</strong> {pedidoSeleccionado.total ?? "-"}
-            </p>
-
-            <p className={styles.info}>
-              <strong>Cliente:</strong>{" "}
-              {pedidoSeleccionado.cliente?.nombre ?? "-"}
+              <strong>Estado:</strong> {pedidoSeleccionado.estado}
             </p>
             <p className={styles.info}>
-              <strong>Teléfono:</strong>{" "}
-              {pedidoSeleccionado.cliente?.telefono ?? "-"}
+              <strong>Total:</strong> {pedidoSeleccionado.total}
             </p>
             <p className={styles.info}>
-              <strong>Direccion:</strong>{" "}
-              {pedidoSeleccionado.cliente?.direccion ?? "-"}
+              <strong>Cliente:</strong> {pedidoSeleccionado.cliente?.nombre}
+            </p>
+            <p className={styles.info}>
+              <strong>Teléfono:</strong> {pedidoSeleccionado.cliente?.telefono}
+            </p>
+            <p className={styles.info}>
+              <strong>Dirección:</strong>{" "}
+              {pedidoSeleccionado.cliente?.direccion}
             </p>
 
             {loadingItems && <div>Cargando productos...</div>}
-            {!loadingItems && itemsPedido.length === 0 && (
-              <div>No hay items asociados.</div>
-            )}
-            {!loadingItems && itemsPedido.length > 0 && (
+
+            {!loadingItems && (
               <div className={styles.itemsContainer}>
                 <table className={styles.itemsTable}>
-                  <thead>
+                  <thead className={styles.desktHeader}>
                     <tr>
                       <th>Producto</th>
                       <th>Cant.</th>
-                      <th>Codigo</th>
+                      <th>Código</th>
                       <th>Precio</th>
                       <th>Total</th>
                     </tr>
                   </thead>
-
                   <tbody>
                     {itemsPedido.map((item) => {
                       const precio =
@@ -321,13 +255,21 @@ export default function PedidosList() {
                           : item.precio_unitario;
 
                       return (
-                        <tr key={item.id} className={styles.itemsRow}>
-                          <td className={styles.info}>{item.nombre_prod}</td>
-                          <td className={styles.info}>{item.cantidad}</td>
-                          <td className={styles.info}>{item.codigo}</td>
-                          <td className={styles.info}>{precio}</td>
-                          <td className={styles.info}>
-                            {item.cantidad * precio}
+                        <tr key={item.id}>
+                          <td data-label="Producto">
+                            <div>{item.nombre_prod}</div>
+                          </td>
+                          <td data-label="Cant.">
+                            <div>{item.cantidad}</div>
+                          </td>
+                          <td data-label="Código">
+                            <div>{item.codigo}</div>
+                          </td>
+                          <td data-label="Precio">
+                            <div>{precio}</div>
+                          </td>
+                          <td data-label="Total">
+                            <div>{item.cantidad * precio}</div>
                           </td>
                         </tr>
                       );
