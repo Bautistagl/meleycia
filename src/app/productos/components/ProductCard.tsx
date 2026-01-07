@@ -232,6 +232,31 @@ export function ProductCard({
                 <strong> {producto.descripcion}</strong>
               </h2>
             </div>
+            {producto.precio_oferta &&
+            producto.precio_oferta < producto.precio ? (
+              <div className={styles.pricingContainer}>
+                <div className={styles.originalPrice}>
+                  ${formatMoney(producto.precio)}{" "}
+                </div>
+                <div className={styles.offerPrice}>
+                  <span className={styles.offerPriceText}>
+                    ${formatMoney(producto.precio_oferta)}{" "}
+                  </span>
+                  <span className={styles.discountPercentage}>
+                    {Math.round(
+                      ((producto.precio - producto.precio_oferta) /
+                        producto.precio) *
+                        100
+                    )}
+                    % OFF
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.price}>
+                ${formatMoney(producto.precio)}
+              </div>
+            )}
             {/* {stockEnabled && (
               <div className={styles.actionsContainer}>
                 <button

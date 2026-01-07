@@ -77,6 +77,12 @@ export default function ProductsPage() {
       .replace(/[\u0300-\u036f]/g, "")
       .trim();
 
+  const buildSearchVariants = (term: string) => {
+    const raw = term.trim();
+    const normalized = normalize(raw);
+    return raw === normalized ? [raw] : [raw, normalized];
+  };
+
   const detectBrandFromSearch = (term: string) => {
     if (!term) return "";
     const nTerm = normalize(term);
@@ -110,9 +116,19 @@ export default function ProductsPage() {
         if (detectedBrand) {
           query = query.eq("marca", detectedBrand);
         } else if (debouncedSearchTerm) {
-          query = query.or(
-            `nombre.ilike.%${debouncedSearchTerm}%,descripcion.ilike.%${debouncedSearchTerm}%,codigo.ilike.%${debouncedSearchTerm}%`
-          );
+          const variants = buildSearchVariants(debouncedSearchTerm);
+
+          const orParts: string[] = [];
+          variants.forEach((v) => {
+            const safe = v.replace(/,/g, "");
+            orParts.push(
+              `nombre.ilike.%${safe}%`,
+              `descripcion.ilike.%${safe}%`,
+              `codigo.ilike.%${safe}%`
+            );
+          });
+
+          query = query.or(orParts.join(","));
         }
 
         if (filters.inStockOnly) query = query.gt("stock", 0);
@@ -137,6 +153,17 @@ export default function ProductsPage() {
         ...(prodRes.data || []).map((p) => ({ ...p, __type: "producto" })),
         ...(comboRes.data || []).map((c) => ({ ...c, __type: "combo" })),
       ];
+
+      if (debouncedSearchTerm) {
+        const variants = buildSearchVariants(debouncedSearchTerm);
+        merged = merged.filter((i) =>
+          variants.some((v) =>
+            normalize(
+              `${i.nombre ?? ""} ${i.descripcion ?? ""} ${i.codigo ?? ""}`
+            ).includes(normalize(v))
+          )
+        );
+      }
 
       if (filters.inStockOnly) {
         merged = merged.filter((i) => Number(i.stock) > 0);
@@ -324,6 +351,7 @@ export default function ProductsPage() {
     </div>
   );
 }
+
 
 
 // Deberías añadir los estilos CSS para .headerButton y .active en tu archivo products.module.css

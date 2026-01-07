@@ -94,7 +94,6 @@ export function CombosTable() {
     <div className={styles.container}>
       <div className={styles.filters}>
         <div className={styles.search}>
-          {/* El componente Search ahora cambia el estado searchTerm, que dispara la consulta */}
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </div>
       </div>

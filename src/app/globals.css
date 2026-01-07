@@ -391,6 +391,14 @@ a {
   width: 140px;
   height: 140px;
 }
+.card-front img{
+  width: 100px !important;
+}
+.card-back a{
+  display: flex !important;
+  margin: auto;
+ text-align: center !important;
+}
 .card-inner{
   margin: 0px;
 }

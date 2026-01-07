@@ -53,3 +53,58 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 768px) {
+  .paginationContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    align-items: center;
+  }
+
+  .pageNumbers {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .pageNumbers::-webkit-scrollbar {
+    display: none; /* Chrome / Safari */
+  }
+
+  .pageButton {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 14px;
+  }
+
+  .pageNumber {
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .ellipsis {
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageButton {
+    font-size: 13px;
+  }
+
+  .pageNumber {
+    min-width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}

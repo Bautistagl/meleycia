@@ -38,6 +38,7 @@ export default async function EditProductPage({
           price: product.precio,
           stock: product.stock,
           descripcion: product.descripcion,
+          precio_oferta: product.precio_oferta,
           imageUrl: product.imageUrl,
           codigo: product.codigo,
         }}

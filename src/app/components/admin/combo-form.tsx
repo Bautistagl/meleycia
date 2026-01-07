@@ -13,6 +13,7 @@ interface ComboFormProps {
     price?: number;
     stock?: number;
     descripcion?: string;
+    precio_oferta?: number | null;
     imageUrl?: string;
     codigo?: string;
   };
@@ -44,6 +45,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
     price: initialData?.price || 0,
     stock: initialData?.stock || 1,
     descripcion: initialData?.descripcion || "",
+    precio_oferta: initialData?.precio_oferta || null,
     imageUrl: initialData?.imageUrl || "",
     codigo: initialData?.codigo,
   });
@@ -105,11 +107,13 @@ export function ComboForm({ initialData }: ComboFormProps) {
 
     return publicUrlData.publicUrl;
   };
-
+  const [formattedOfferPrice, setFormattedOfferPrice] = useState(
+    formatMoney(initialData?.precio_oferta ?? null)
+  );
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price, stock, descripcion, codigo } = formData;
+    const { name, price, stock, descripcion, codigo, precio_oferta } = formData;
 
     let finalImageUrl: string | null = null;
 
@@ -131,6 +135,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
           precio: price,
           stock: stock > 0, // Asegura que se guarde como booleano
           descripcion: descripcion,
+          precio_oferta: precio_oferta,
           imageUrl: finalImageUrl,
           codigo: codigo,
         })
@@ -144,6 +149,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
             precio: price,
             stock: stock,
             descripcion: descripcion,
+            precio_oferta: precio_oferta,
             imageUrl: finalImageUrl,
             codigo: codigo,
           },
@@ -173,6 +179,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
         price: 0,
         stock: 1,
         descripcion: "",
+        precio_oferta: 0,
         imageUrl: "",
         codigo: "",
       });
@@ -187,7 +194,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
         <div className={styles.formSection}>
           <div className={styles.formGroup}>
             <label htmlFor="name" className={styles.label}>
-              Nombre del producto
+              Nombre del combo
             </label>
             <input
               id="name"
@@ -244,6 +251,29 @@ export function ComboForm({ initialData }: ComboFormProps) {
               </select>
             </div>
             <div className={styles.formGroup}>
+              <label htmlFor="precio_oferta" className={styles.label}>
+                Precio de oferta ($)
+              </label>
+              <input
+                id="precio_oferta"
+                className={styles.input}
+                type="text" // Cambiado a "text"
+                value={formattedOfferPrice}
+                onChange={(e) => {
+                  setFormattedOfferPrice(e.target.value);
+                }}
+                onBlur={() => {
+                  const numericValue = parseMoney(formattedOfferPrice);
+                  setFormData({
+                    ...formData,
+                    precio_oferta: numericValue,
+                  });
+                  setFormattedOfferPrice(formatMoney(numericValue));
+                }}
+                placeholder="Opcional"
+              />
+            </div>
+            <div className={styles.formGroup}>
               <label htmlFor="name" className={styles.label}>
                 Codigo del combo
               </label>
@@ -259,7 +289,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="name" className={styles.label}>
-                Descripcion del producto
+                Descripcion del combo
               </label>
               <textarea
                 id="name"
@@ -277,7 +307,7 @@ export function ComboForm({ initialData }: ComboFormProps) {
         <div className={styles.formSection}>
           <div className={styles.imageUpload}>
             <label htmlFor="image" className={styles.label}>
-              Imagen del producto
+              Imagen del combo
             </label>
             <input
               id="image"

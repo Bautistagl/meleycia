@@ -13,6 +13,7 @@ interface ProductFormProps {
     price?: number;
     stock?: boolean;
     descripcion?: string;
+    precio_oferta?: number;
     imageUrl?: string;
     codigo?: string;
   };
@@ -44,6 +45,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
     price: initialData?.price || 0,
     stock: initialData?.stock || false,
     descripcion: initialData?.descripcion || "",
+    precio_oferta: initialData?.precio_oferta || null,
     imageUrl: initialData?.imageUrl || "",
     codigo: initialData?.codigo || "",
   });
@@ -57,7 +59,9 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
   const [formattedPrice, setFormattedPrice] = useState(
     formatMoney(initialData?.price || 0)
   );
-
+  const [formattedOfferPrice, setFormattedOfferPrice] = useState(
+    formatMoney(initialData?.precio_oferta ?? null)
+  );
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -101,7 +105,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { name, price, stock, descripcion, codigo } = formData;
+    const { name, price, stock, descripcion, codigo, precio_oferta } = formData;
 
     let finalImageUrl: string | null = null;
 
@@ -123,6 +127,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
           precio: price,
           stock: stock, // Asegura que se guarde como booleano
           descripcion: descripcion,
+          precio_oferta: precio_oferta,
           imageUrl: finalImageUrl,
           codigo: codigo,
         })
@@ -136,6 +141,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
             precio: price,
             stock: stock,
             descripcion: descripcion,
+            precio_oferta: precio_oferta,
             imageUrl: finalImageUrl,
             codigo: codigo,
           },
@@ -165,6 +171,7 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
         price: 0,
         stock: true,
         descripcion: "",
+        precio_oferta: 0,
         imageUrl: "",
         codigo: "",
       });
@@ -251,6 +258,29 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
                 <option value="false">No Disponible</option>
               </select>
             </div>
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="precio_oferta" className={styles.label}>
+              Precio de oferta ($)
+            </label>
+            <input
+              id="precio_oferta"
+              className={styles.input}
+              type="text" // Cambiado a "text"
+              value={formattedOfferPrice}
+              onChange={(e) => {
+                setFormattedOfferPrice(e.target.value);
+              }}
+              onBlur={() => {
+                const numericValue = parseMoney(formattedOfferPrice);
+                setFormData({
+                  ...formData,
+                  precio_oferta: numericValue,
+                });
+                setFormattedOfferPrice(formatMoney(numericValue));
+              }}
+              placeholder="Opcional"
+            />
           </div>
         </div>
 
