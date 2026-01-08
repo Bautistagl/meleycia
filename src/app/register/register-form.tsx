@@ -216,7 +216,7 @@ const RegisterForm: React.FC = () => {
               type="loc"
               id="localidad"
               value={formData.localidad}
-              onChange={(e) => handleInputChange("direccion", e.target.value)}
+              onChange={(e) => handleInputChange("localidad", e.target.value)}
               className={styles.input}
               autoComplete="loc"
             />

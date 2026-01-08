@@ -50,10 +50,7 @@ export function ProductCard({
 
     try {
       // 1. Llamar al servicio de actualización
-      const updatedProduct = await updateProductStock(
-        producto.codigo,
-        newStock
-      );
+      const updatedProduct = await updateProductStock(producto.id, newStock);
 
       if (updatedProduct) {
         // 2. Si la actualización en BD fue exitosa
@@ -158,6 +155,7 @@ export function ProductCard({
 
   return (
     <div>
+
       {showLoginModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>

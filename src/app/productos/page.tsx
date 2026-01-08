@@ -18,9 +18,12 @@ type Combo = {
   precio: number;
   precio_oferta?: number;
   stock?: number;
+  created_at: string;
   [key: string]: any;
 };
-
+type WithCreatedAt = {
+  created_at: string;
+};
 interface FiltersState {
   category: string;
   brand: string;
@@ -30,8 +33,8 @@ interface FiltersState {
 type CurrentView = "productos" | "ofertas";
 
 type DisplayItem =
-  | (Producto & { __type: "producto" })
-  | (Combo & { __type: "combo" });
+  | (Producto & WithCreatedAt & { __type: "producto" })
+  | (Combo & WithCreatedAt & { __type: "combo" });
 
 export default function ProductsPage() {
   const [currentView, setCurrentView] = useState<CurrentView>("productos");
@@ -168,6 +171,11 @@ export default function ProductsPage() {
       if (filters.inStockOnly) {
         merged = merged.filter((i) => Number(i.stock) > 0);
       }
+
+      merged.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
       setItems(merged.slice(from, to + 1));
       setTotalItems(merged.length);

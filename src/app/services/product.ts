@@ -15,23 +15,20 @@ const supabase = createClient(supabaseUrl, supabaseKey);
  * @returns El producto actualizado o null si hay un error.
  */
 export async function updateProductStock(
-  codigo: Producto["codigo"], // El tipo de código puede ser string o number
+  id: Producto["id"],
   newStock: boolean
 ): Promise<Producto | null> {
-  // Asumiendo que el nombre de tu tabla es 'productos' y la columna de stock es 'stock'
   const { data, error } = await supabase
-    .from("productos") // Asegúrate de que este es el nombre de tu tabla
+    .from("productos")
     .update({ stock: newStock })
-    .eq("codigo", codigo) // 'codigo' es la columna de identificación del producto
-    .select() // Opcional: devuelve el registro actualizado
+    .eq("id", id)
+    .select()
     .single();
 
   if (error) {
     console.error("Error al actualizar el stock:", error.message);
-    // Podrías lanzar un error o retornar null
     return null;
   }
 
-  // El objeto 'data' contendrá el producto actualizado (si usamos .single())
-  return data as Producto; 
+  return data as Producto;
 }
