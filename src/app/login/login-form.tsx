@@ -93,31 +93,41 @@ const LoginForm: React.FC<LoginFormProps> = () => {
           {error && <div className={styles.errorMessage}>{error}</div>}
 
           <div className={styles.inputGroup}>
-            <label htmlFor="email" className={styles.label}>Email</label>
+            <label htmlFor="email" className={styles.label}>
+              Email
+            </label>
             <div className={styles.inputWrapper}>
               <input
                 type="email"
                 id="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`${styles.input} ${formErrors.email ? styles.inputError : ""}`}
+                className={`${styles.input} ${
+                  formErrors.email ? styles.inputError : ""
+                }`}
                 placeholder="tu@email.com"
                 disabled={isLoading}
                 autoComplete="email"
               />
             </div>
-            {formErrors.email && <span className={styles.fieldError}>{formErrors.email}</span>}
+            {formErrors.email && (
+              <span className={styles.fieldError}>{formErrors.email}</span>
+            )}
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>Contraseña</label>
+            <label htmlFor="password" className={styles.label}>
+              Contraseña
+            </label>
             <div className={styles.inputWrapper}>
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                className={`${styles.input} ${formErrors.password ? styles.inputError : ""}`}
+                className={`${styles.input} ${
+                  formErrors.password ? styles.inputError : ""
+                }`}
                 placeholder="••••••••"
                 disabled={isLoading}
                 autoComplete="current-password"
@@ -131,10 +141,16 @@ const LoginForm: React.FC<LoginFormProps> = () => {
                 {/* Icons omitidos por brevedad */}
               </button>
             </div>
-            {formErrors.password && <span className={styles.fieldError}>{formErrors.password}</span>}
+            {formErrors.password && (
+              <span className={styles.fieldError}>{formErrors.password}</span>
+            )}
           </div>
 
-          <button type="submit" className={styles.submitButton} disabled={isLoading}>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
             {isLoading ? (
               <>
                 <div className={styles.spinner}></div>
@@ -145,16 +161,26 @@ const LoginForm: React.FC<LoginFormProps> = () => {
             )}
           </button>
         </form>
-        
+
         <div className={styles.footer}>
           <p className={styles.footerText}>
             ¿No tienes una cuenta?{" "}
-            <a href="/register" className={styles.signupLink}>Regístrate aquí</a>
+            <a href="/register" className={styles.signupLink}>
+              Regístrate aquí
+            </a>
+          </p>
+        </div>
+        <div className={styles.footer}>
+          <p className={styles.footerText}>
+            ¿Olvidaste tu contraseña?{" "}
+            <a href="/nuevaContrasena" className={styles.signupLink}>
+              Restablecer Contraseña
+            </a>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default LoginForm
