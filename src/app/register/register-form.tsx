@@ -35,7 +35,6 @@ const RegisterForm: React.FC = () => {
   });
   const router = useRouter();
   const [formErrors, setFormErrors] = useState<Partial<RegisterFormData>>({});
-
   const validateForm = (): boolean => {
     const errors: Partial<RegisterFormData> = {};
 
@@ -57,6 +56,19 @@ const RegisterForm: React.FC = () => {
 
     if (!formData.telefono.trim()) {
       errors.telefono = "Teléfono requerido";
+    }
+
+    // VALIDACIONES AGREGADAS
+    if (!formData.direccion.trim()) {
+      errors.direccion = "Dirección requerida";
+    }
+
+    if (!formData.dni.trim()) {
+      errors.dni = "DNI/CUIT requerido";
+    }
+
+    if (!formData.localidad.trim()) {
+      errors.localidad = "Localidad requerida";
     }
 
     setFormErrors(errors);
@@ -176,6 +188,7 @@ const RegisterForm: React.FC = () => {
               <span className={styles.fieldError}>{formErrors.telefono}</span>
             )}
           </div>
+          {/* DNI */}
           <div className={styles.inputGroup}>
             <label htmlFor="dni" className={styles.label}>
               DNI / CUIT
@@ -188,40 +201,45 @@ const RegisterForm: React.FC = () => {
               className={styles.input}
               autoComplete="dni"
             />
-            {formErrors.telefono && (
-              <span className={styles.fieldError}>{formErrors.telefono}</span>
+            {formErrors.dni && (
+              <span className={styles.fieldError}>{formErrors.dni}</span>
             )}
           </div>
+
+          {/* Dirección */}
           <div className={styles.inputGroup}>
             <label htmlFor="direccion" className={styles.label}>
               Dirección de entrega
             </label>
             <input
-              type="tel"
+              type="text"
               id="direccion"
               value={formData.direccion}
               onChange={(e) => handleInputChange("direccion", e.target.value)}
               className={styles.input}
-              autoComplete="dir"
+              autoComplete="street-address"
+              required
             />
-            {formErrors.telefono && (
-              <span className={styles.fieldError}>{formErrors.telefono}</span>
+            {formErrors.direccion && (
+              <span className={styles.fieldError}>{formErrors.direccion}</span>
             )}
           </div>
+
+          {/* Localidad */}
           <div className={styles.inputGroup}>
             <label htmlFor="Localidad" className={styles.label}>
               Localidad
             </label>
             <input
-              type="loc"
+              type="text"
               id="localidad"
               value={formData.localidad}
               onChange={(e) => handleInputChange("localidad", e.target.value)}
               className={styles.input}
-              autoComplete="loc"
+              autoComplete="address-level2"
             />
-            {formErrors.telefono && (
-              <span className={styles.fieldError}>{formErrors.telefono}</span>
+            {formErrors.localidad && (
+              <span className={styles.fieldError}>{formErrors.localidad}</span>
             )}
           </div>
 
