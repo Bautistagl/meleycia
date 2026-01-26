@@ -38,6 +38,11 @@ export default function CartSummary({
     { nombre: "JORGE", numero: 18 },
     { nombre: "ALEJANDRA", numero: 19 },
     { nombre: "NAHUEL", numero: 26 },
+    { nombre: "HUGO", numero: 5 },
+    { nombre: "MARCELO", numero: 12 },
+    { nombre: "HORACIO", numero: 25 },
+    { nombre: "JOSE", numero: 32 },
+    { nombre: "MARIANO", numero: 22 },
   ];
 
   const subtotal = useMemo(() => {
@@ -80,7 +85,7 @@ export default function CartSummary({
           <option value="">-- Seleccionar --</option>
           {vendedores.map((v) => (
             <option key={v.numero} value={v.nombre}>
-              {v.nombre}
+              {v.nombre} ({v.numero})
             </option>
           ))}
         </select>

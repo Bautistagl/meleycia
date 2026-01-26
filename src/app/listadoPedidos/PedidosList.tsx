@@ -8,6 +8,7 @@ interface Cliente {
   nombre: string | null;
   telefono: string | null;
   direccion: string | null;
+  localidad: string | null;
 }
 
 interface Pedido {
@@ -40,7 +41,7 @@ export default function PedidosList() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState<Pedido | null>(
-    null
+    null,
   );
   const [itemsPedido, setItemsPedido] = useState<PedidoItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
@@ -73,7 +74,7 @@ export default function PedidosList() {
   useEffect(() => {
     supabase
       .from("pedidos")
-      .select(`*, cliente:cliente_id (nombre, telefono, direccion)`)
+      .select(`*, cliente:cliente_id (nombre, telefono, direccion, localidad)`)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (data) setPedidos(data);
@@ -89,7 +90,7 @@ export default function PedidosList() {
     if (mail === "meleycia@admin.com")
       return pedidos.filter((p) => p.numero_vendedor === 1);
     return pedidos.filter(
-      (p) => (p.vendedor ?? "").toLowerCase() === vendedorLocal
+      (p) => (p.vendedor ?? "").toLowerCase() === vendedorLocal,
     );
   })();
 
@@ -97,14 +98,14 @@ export default function PedidosList() {
     await supabase.from("pedidos").update({ estado }).eq("id", id);
     const { data } = await supabase
       .from("pedidos")
-      .select(`*, cliente:cliente_id (nombre, telefono, direccion)`)
+      .select(`*, cliente:cliente_id (nombre, telefono, direccion, localidad)`)
       .order("created_at", { ascending: false });
     if (data) setPedidos(data);
   };
   const asignarVendedor = async (
     pedidoId: number,
     numero: number,
-    nombre: string
+    nombre: string,
   ) => {
     await supabase
       .from("pedidos")
@@ -185,7 +186,7 @@ export default function PedidosList() {
                     ))}{" "}
                   </select>
                 ) : (
-                  p.vendedor ?? "-"
+                  (p.vendedor ?? "-")
                 )}{" "}
               </td>
               <td data-label="Cliente">
@@ -227,6 +228,10 @@ export default function PedidosList() {
             </p>
             <p className={styles.info}>
               <strong>Teléfono:</strong> {pedidoSeleccionado.cliente?.telefono}
+            </p>
+            <p className={styles.info}>
+              <strong>Localidad:</strong>{" "}
+              {pedidoSeleccionado.cliente?.localidad}
             </p>
             <p className={styles.info}>
               <strong>Dirección:</strong>{" "}
