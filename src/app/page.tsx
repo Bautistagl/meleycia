@@ -46,13 +46,13 @@ export default function Home() {
     <div className="">
       <Navbar />
       <FeaturesSection />
-      <BannerCarousel
+      {/* <BannerCarousel
         images={customBanners}
         autoPlay={true}
         autoPlayInterval={4000}
         showIndicators={true}
         showNavigation={true}
-      />
+      /> */}
       <Suppliers />
       <Features />
       <ProductSection />
