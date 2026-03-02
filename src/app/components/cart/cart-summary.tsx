@@ -46,14 +46,7 @@ export default function CartSummary({
   ];
 
   const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => {
-      const precioBase = item.producto?.precio ?? 0;
-      const oferta = item.producto?.precio_oferta;
-
-      const precioFinal = oferta && oferta > 0 ? oferta : precioBase;
-
-      return sum + precioFinal * item.cantidad;
-    }, 0);
+    return items.reduce((sum, item) => sum + item.precio_unitario * item.cantidad, 0);
   }, [items]);
 
   const total = subtotal;
