@@ -12,6 +12,9 @@ export const obtenerCarritoActivoCliente = async (
       *,
       producto:productos (
         id, nombre, precio, stock, precio_oferta
+      ),
+      combo:combos (
+        id, nombre, precio, stock, precio_oferta
       )
     `
     )
@@ -64,6 +67,54 @@ export const agregarProductoAlCarrito = async (
       foto,
       marca,
       codigo,
+    })
+    .select()
+    .single();
+
+  if (error) return null;
+  return data as CarritoItem;
+};
+
+export const agregarComboAlCarrito = async (
+  clienteId: string,
+  comboId: string,
+  cantidad: number,
+  precioUnitario: number,
+  nombre: string,
+  descripcion: string,
+  foto: string
+): Promise<CarritoItem | null> => {
+  const { data: existingItem, error: existingError } = await supabase
+    .from("items_carrito")
+    .select("*")
+    .eq("client_id", clienteId)
+    .eq("combo_id", comboId)
+    .single();
+
+  if (existingError && existingError.code !== "PGRST116") return null;
+
+  if (existingItem) {
+    const nuevaCantidad = existingItem.cantidad + cantidad;
+    const { data, error } = await supabase
+      .from("items_carrito")
+      .update({ cantidad: nuevaCantidad })
+      .eq("id", existingItem.id)
+      .select()
+      .single();
+    if (error) return null;
+    return data as CarritoItem;
+  }
+
+  const { data, error } = await supabase
+    .from("items_carrito")
+    .insert({
+      client_id: clienteId,
+      combo_id: comboId,
+      cantidad,
+      precio_unitario: precioUnitario,
+      nombre_prod: nombre,
+      descripcion,
+      foto,
     })
     .select()
     .single();

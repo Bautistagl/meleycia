@@ -16,17 +16,19 @@ export interface Producto {
 export interface CarritoItem {
   id: number;
   cliente_id?: string;
-  producto_id: number;
+  producto_id?: number | null;
+  combo_id?: string | null;
   pedido_id?: string;
   cantidad: number;
   precio_unitario: number;
   precio_oferta: number;
   precio_total: number;
+  nombre_prod?: string;
   descripcion: string;
   foto: string;
   marca: string;
   codigo: string;
-  producto: Producto; // Para hacer joins y tener la info del producto
+  producto?: Producto | null;
 }
 
 export interface Pedido {

@@ -32,3 +32,20 @@ export async function updateProductStock(
 
   return data as Producto;
 }
+
+export async function updateComboStock(
+  id: string,
+  newStock: boolean
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("combos")
+    .update({ stock: newStock })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error al actualizar el stock del combo:", error.message);
+    return false;
+  }
+
+  return true;
+}

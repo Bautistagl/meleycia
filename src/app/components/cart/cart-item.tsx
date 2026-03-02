@@ -46,10 +46,7 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
     removeItem(item.id);
   };
 
-  const precioBase = item.producto?.precio ?? 0;
-  const oferta = item.producto?.precio_oferta;
-  const precioFinal = oferta && oferta > 0 ? oferta : precioBase;
-
+  const precioFinal = item.precio_unitario;
   const totalPrice = precioFinal * quantity;
 
   return (
@@ -66,7 +63,7 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
         </div>
         <div className={styles.productInfo}>
           <h3 className={styles.productName}>
-            {item.producto?.nombre || `Producto #${item.producto_id}`}
+            {item.nombre_prod || item.producto?.nombre || `Producto #${item.producto_id ?? item.combo_id}`}
           </h3>
           <p className={styles.productCategory}>{item.marca || "Sin Marca"}</p>
         </div>

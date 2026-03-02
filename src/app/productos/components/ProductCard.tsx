@@ -3,11 +3,11 @@
 import type { Producto } from "@/types";
 import styles from "./ProductCard.module.css";
 import useAuth from "@/hooks/useAuth"; // Habilitado
-import { agregarProductoAlCarrito } from "@/services/cart";
+import { agregarProductoAlCarrito, agregarComboAlCarrito } from "@/services/cart";
 import Swal from "sweetalert2";
 import { useState, useCallback } from "react"; // Añadido useCallback
 import Link from "next/link";
-import { updateProductStock } from "@/app/services/product";
+import { updateProductStock, updateComboStock } from "@/app/services/product";
 
 interface ProductoCardProps {
   producto: Producto;
@@ -41,34 +41,34 @@ export function ProductCard({
   const [isLoading, setIsLoading] = useState(false); // Se usará para el carrito también
 
   const handleStockToggle = async () => {
-    // Cambiado a asíncrono
     const newStock = !stockEnabled;
 
-    if (isLoading) return; // Evitar múltiples clicks
+    if (isLoading) return;
 
-    setIsLoading(true); // Iniciar carga
+    setIsLoading(true);
 
     try {
-      // 1. Llamar al servicio de actualización
-      const updatedProduct = await updateProductStock(producto.id, newStock);
+      let success = false;
 
-      if (updatedProduct) {
-        // 2. Si la actualización en BD fue exitosa
-        setStockEnabled(newStock); // Actualiza el estado local
+      if (isCombo) {
+        success = await updateComboStock(String(producto.id), newStock);
+      } else {
+        const updatedProduct = await updateProductStock(producto.id, newStock);
+        success = !!updatedProduct;
+      }
 
-        // 3. Notificar al componente padre si es necesario (opcional)
+      if (success) {
+        setStockEnabled(newStock);
         if (onStockChange) {
           onStockChange(producto.codigo, newStock);
         }
       } else {
-        console.error(
-          "Fallo al actualizar el producto, revisar logs de updateProductStock."
-        );
+        console.error("Fallo al actualizar el stock.");
       }
     } catch (error) {
       console.error("Error en handleStockToggle:", error);
     } finally {
-      setIsLoading(false); // Finalizar carga, independientemente del resultado
+      setIsLoading(false);
     }
   };
 
@@ -101,26 +101,32 @@ export function ProductCard({
           ? producto.precio_oferta
           : producto.precio;
 
-      // 5. Asegurarse de que producto.id es un número (requerido por la utilidad)
-      // Si tu ID de producto se llama diferente (ej: producto.id_producto), ajusta esta línea.
-      const productoIdNumerico = producto.id as number;
-
-      if (typeof productoIdNumerico !== "number") {
-        throw new Error("El ID del producto no es un número válido.");
+      if (!producto.id) {
+        throw new Error("El ID del producto no es válido.");
       }
 
-      // 6. Llamar a la utilidad del carrito
-      const result = await agregarProductoAlCarrito(
-        user.id,
-        productoIdNumerico,
-        quantity,
-        precioParaCarrito,
-        producto.nombre,
-        producto.descripcion || "",
-        producto.imageUrl || "/placeholder.svg",
-        producto.marca || "",
-        producto.codigo || ""
-      );
+      // 6. Llamar a la utilidad del carrito según tipo
+      const result = isCombo
+        ? await agregarComboAlCarrito(
+            user.id,
+            String(producto.id),
+            quantity,
+            precioParaCarrito,
+            producto.nombre,
+            producto.descripcion || "",
+            producto.imageUrl || "/placeholder.svg"
+          )
+        : await agregarProductoAlCarrito(
+            user.id,
+            Number(producto.id),
+            quantity,
+            precioParaCarrito,
+            producto.nombre,
+            producto.descripcion || "",
+            producto.imageUrl || "/placeholder.svg",
+            producto.marca || "",
+            producto.codigo || ""
+          );
 
       // 7. Mostrar feedback
       if (result) {
@@ -196,6 +202,22 @@ export function ProductCard({
                 {stockEnabled ? "Con stock" : "Sin stock"}
               </span>
             </div>
+            {admin && (
+              <label className={styles.toggleSwitch}>
+                <input
+                  type="checkbox"
+                  checked={stockEnabled}
+                  disabled={isLoading}
+                  onChange={handleStockToggle}
+                  className={styles.toggleInput}
+                />
+                {isLoading ? (
+                  <span className={styles.loadingIndicator}>🔄</span>
+                ) : (
+                  <span className={styles.toggleSlider}></span>
+                )}
+              </label>
+            )}
           </div>
 
           <div className={styles.imageContainer}>
@@ -255,11 +277,11 @@ export function ProductCard({
                 ${formatMoney(producto.precio)}
               </div>
             )}
-            {/* {stockEnabled && (
+            {stockEnabled && (
               <div className={styles.actionsContainer}>
                 <button
                   onClick={handleAddToCart}
-                  disabled={isLoading} // Deshabilitar mientras carga
+                  disabled={isLoading}
                   className={styles.addButton}
                 >
                   {isLoading ? "Añadiendo..." : "Añadir Producto"}
@@ -272,10 +294,10 @@ export function ProductCard({
                     setQuantity(Math.max(1, parseInt(e.target.value) || 1))
                   }
                   className={styles.quantityInput}
-                  disabled={isLoading} // Deshabilitar mientras carga
+                  disabled={isLoading}
                 />
               </div>
-            )} */}
+            )}
           </div>
         </div>
       ) : (
