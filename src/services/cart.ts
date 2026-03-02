@@ -183,7 +183,7 @@ export const crearPedidoDesdeCarrito = async (
     producto_id: item.producto_id,
     cantidad: item.cantidad,
     precio_unitario: item.precio_unitario,
-    nombre_prod: item.producto?.nombre,
+    nombre_prod: item.nombre_prod || item.producto?.nombre,
     descripcion: item.descripcion,
     foto: item.foto,
     marca: item.marca,
@@ -194,7 +194,10 @@ export const crearPedidoDesdeCarrito = async (
     .from("pedido_items")
     .insert(pedidoItems);
 
-  if (itemsError) return null;
+  if (itemsError) {
+    console.error("Error al insertar items del pedido:", itemsError);
+    return null;
+  }
 
   // 3. Vaciar carrito
   await supabase.from("items_carrito").delete().eq("client_id", clienteId);
