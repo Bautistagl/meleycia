@@ -4,6 +4,7 @@ import type React from "react";
 import styles from "./product-form.module.css";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/compressImage";
 import Swal from "sweetalert2";
 
 interface ProductFormProps {
@@ -77,12 +78,21 @@ export function ComboEditForm({ initialData }: ProductFormProps) {
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return imageUrl;
 
-    const fileName = `${Date.now()}-${imageFile.name}`;
+    // Comprimir antes de subir para reducir cached egress
+    const fileToUpload = await compressImage(imageFile, {
+      maxWidthOrHeight: 1200,
+      quality: 0.82,
+      mimeType: "image/webp",
+    });
+
+    const fileName = `${Date.now()}-${fileToUpload.name}`;
     const { error } = await supabase.storage
       .from("mele-imagenes")
-      .upload(fileName, imageFile, {
-        cacheControl: "3600",
+      .upload(fileName, fileToUpload, {
+        // 1 año + immutable: el nombre incluye Date.now() así que el archivo nunca cambia
+        cacheControl: "31536000, immutable",
         upsert: false,
+        contentType: fileToUpload.type,
       });
 
     if (error) {

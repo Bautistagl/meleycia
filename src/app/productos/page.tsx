@@ -86,6 +86,23 @@ export default function ProductsPage() {
     return raw === normalized ? [raw] : [raw, normalized];
   };
 
+  const isWholeWordMatch = (text: string, term: string) => {
+    const t = normalize(text);
+    const q = normalize(term);
+    return new RegExp(`(^|[^a-z0-9\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1])${q}([^a-z0-9\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]|$)`).test(t);
+  };
+
+  const sortByRelevance = (data: any[], term: string) => {
+    if (!term) return data;
+    return [...data].sort((a, b) => {
+      const aExact = isWholeWordMatch(`${a.nombre ?? ""} ${a.descripcion ?? ""}`, term);
+      const bExact = isWholeWordMatch(`${b.nombre ?? ""} ${b.descripcion ?? ""}`, term);
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      return 0;
+    });
+  };
+
   const detectBrandFromSearch = (term: string) => {
     if (!term) return "";
     const nTerm = normalize(term);
@@ -96,7 +113,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500);
+    }, 800);
 
     return () => clearTimeout(timeout);
   }, [searchTerm]);
@@ -139,10 +156,18 @@ export default function ProductsPage() {
           query = query.ilike("categoria", `%${filters.category}%`);
         if (filters.brand) query = query.ilike("marca", `%${filters.brand}%`);
 
-        const { data, count } = await query.range(from, to);
+        if (debouncedSearchTerm) {
+          // Fetch all matches to sort by relevance, then paginate client-side
+          const { data } = await query;
+          const sorted = sortByRelevance(data || [], debouncedSearchTerm);
+          setTotalItems(sorted.length);
+          setItems(sorted.slice(from, to + 1).map((p) => ({ ...p, __type: "producto" })));
+        } else {
+          const { data, count } = await query.range(from, to);
+          setItems((data || []).map((p) => ({ ...p, __type: "producto" })));
+          setTotalItems(count || 0);
+        }
 
-        setItems((data || []).map((p) => ({ ...p, __type: "producto" })));
-        setTotalItems(count || 0);
         setIsLoading(false);
         return;
       }

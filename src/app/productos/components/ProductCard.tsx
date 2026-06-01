@@ -226,12 +226,16 @@ export function ProductCard({
                 src={producto.imageUrl || "/placeholder.svg"}
                 alt={producto.nombre}
                 className={styles.image}
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <img
                 src="/placeholder.svg"
                 alt="Imagen no disponible"
                 className={styles.image}
+                loading="lazy"
+                decoding="async"
               />
             )}
           </div>
@@ -341,12 +345,16 @@ export function ProductCard({
                 src={producto.imageUrl || "/placeholder.svg"}
                 alt={producto.nombre}
                 className={styles.image}
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <img
                 src="/placeholder.svg"
                 alt="Imagen no disponible"
                 className={styles.image}
+                loading="lazy"
+                decoding="async"
               />
             )}
           </div>
