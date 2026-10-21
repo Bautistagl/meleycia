@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import {supabase} from "@/lib/supabase"
+import Swal from "sweetalert2"
 import styles from "./delete-confirm-dialog.module.css"
 
 interface DeleteConfirmDialogProps {
@@ -16,7 +17,23 @@ export function DeleteCombo({ id, name, children }: DeleteConfirmDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const handleDelete = async () => {
-    await supabase.from("combos").delete().eq("id", id)
+    // .select() devuelve las filas borradas: si viene vacío, no se borró nada
+    const { data, error } = await supabase
+      .from("combos")
+      .delete()
+      .eq("id", id)
+      .select("id")
+
+    if (error || !data || data.length === 0) {
+      console.error("Error al borrar combo:", error)
+      Swal.fire({
+        title: "No se pudo borrar",
+        text: error?.message ?? "El combo no se encontró o no hay permisos para borrarlo.",
+        icon: "error",
+      })
+      return
+    }
+
     setIsOpen(false)
     location.reload()
   }

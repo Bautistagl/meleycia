@@ -2,7 +2,7 @@
 
 import type React from "react";
 import styles from "./product-form.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/compressImage";
 import Swal from "sweetalert2";
@@ -67,6 +67,11 @@ export function ProductForm({ initialData }: ProductFormProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialData?.imageUrl || null
   ); // Estado para la URL de la imagen
+
+  // Evita guardar dos veces por doble clic (generaba productos duplicados).
+  // El ref bloquea de inmediato; el state es para deshabilitar el botón.
+  const submittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estados locales para los valores formateados de los inputs de precio
   const [formattedPrice, setFormattedPrice] = useState(
@@ -161,7 +166,19 @@ export function ProductForm({ initialData }: ProductFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
 
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    try {
+      await saveProduct();
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
+  };
+
+  const saveProduct = async () => {
     const {
       name,
       category,
@@ -199,7 +216,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
           precio_oferta: precio_oferta,
           imageUrl: finalImageUrl,
           destacado: destacado,
-          codigo: codigo,
+          codigo: codigo.trim(),
         })
         .eq("id", initialData.id);
     } else {
@@ -216,7 +233,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             precio_oferta: precio_oferta,
             imageUrl: finalImageUrl,
             destacado: destacado,
-            codigo: codigo,
+            codigo: codigo.trim(),
           },
         ])
         .select();
@@ -462,8 +479,16 @@ export function ProductForm({ initialData }: ProductFormProps) {
         <button type="button" className={styles.cancelButton}>
           Cancelar
         </button>
-        <button type="submit" className={styles.submitButton}>
-          {initialData?.id ? "Actualizar Producto" : "Crear Producto"}
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? "Guardando..."
+            : initialData?.id
+              ? "Actualizar Producto"
+              : "Crear Producto"}
         </button>
       </div>
     </form>

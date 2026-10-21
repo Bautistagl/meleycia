@@ -1,112 +1,144 @@
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
+// Las listas grandes hacen muchas actualizaciones: damos margen antes del timeout.
+export const maxDuration = 60;
+
+// Cantidad de updates que se mandan en paralelo a Supabase.
+const CONCURRENCIA = 25;
+// Supabase devuelve como máximo 1000 filas por consulta.
+const PAGE_SIZE = 1000;
+
+type FilaCSV = { codigo: string; precio_nuevo: number };
+type ProductoDB = { id: number; codigo: string | null; nombre: string | null; precio: number | null };
+
 /**
- * Función para limpiar y parsear las líneas del CSV de forma dinámica.
- *
- * MODIFICACIÓN CLAVE: Se ha cambiado el delimitador de coma (,) a
- * punto y coma (;) para la división de columnas. Se mantiene la lógica
- * de Regex para manejar el caso de que el punto y coma pudiera aparecer
- * dentro de un valor entrecomillado.
- *
- * @param csvContent El contenido completo del archivo CSV como string.
- * @returns Un array de objetos con { codigo, precio_nuevo }.
+ * Divide una línea por el separador, respetando valores entre comillas
+ * (ej: "1.851,48" en un CSV separado por comas) y comillas escapadas ("").
  */
-function parseAndFilterCSV(
-  csvContent: string
-): { codigo: string; precio_nuevo: number }[] {
-  // 1. Dividir líneas y limpiar vacías. Usamos un regex para manejar diferentes tipos de saltos de línea.
-  const lines = csvContent
-    .split(/[\r\n]+/)
-    .filter((line) => line.trim() !== "");
+function splitLinea(linea: string, separador: string): string[] {
+  const campos: string[] = [];
+  let actual = "";
+  let entreComillas = false;
 
-  if (lines.length === 0) return [];
-
-  // 2. Encontrar el índice donde comienzan los datos reales.
-  // Basado en el CSV, los datos comienzan en la tercera línea no vacía (índice 2).
-  let startIndex = 0;
-  for (let i = 0; i < lines.length; i++) {
-    // MODIFICACIÓN 1: Cambiar split(",") por split(";") para la detección de encabezado
-    const lineParts = lines[i].split(";").map((part) => part.trim()); 
-
-    // Buscamos la primera línea que parece ser un encabezado de datos
-    // o el primer registro (con al menos 2 partes no vacías).
-    if (lineParts.length >= 2 && lineParts[0].length > 0) {
-      // Asumiendo que la línea después del encabezado/subencabezado es el inicio de los datos
-      startIndex = i + 1;
-      break;
+  for (let i = 0; i < linea.length; i++) {
+    const c = linea[i];
+    if (c === '"') {
+      if (entreComillas && linea[i + 1] === '"') {
+        actual += '"';
+        i++;
+      } else {
+        entreComillas = !entreComillas;
+      }
+    } else if (c === separador && !entreComillas) {
+      campos.push(actual.trim());
+      actual = "";
+    } else {
+      actual += c;
     }
   }
-
-  // Ajuste basado en la estructura del CSV
-  if (startIndex === 0) startIndex = 2; 
-  if (startIndex >= lines.length) return []; // Si no hay datos
-
-  const dataLines = lines.slice(startIndex);
-  const productsToUpdate: { codigo: string; precio_nuevo: number }[] = [];
-
-  // MODIFICACIÓN 2: Expresión regular para dividir CSV por punto y coma.
-  // Divide por punto y coma (;) SOLAMENTE si NO está dentro de comillas (").
-  const CSV_SPLIT_REGEX = /;(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
-
-  for (const line of dataLines) {
-    // MODIFICACIÓN 3: Usamos el nuevo Regex para dividir por punto y coma.
-    const parts = line.split(CSV_SPLIT_REGEX).map((part) => part.trim()); 
-
-    // Requerimos al menos 2 columnas (Código y Precio). En este CSV, serán 3.
-    if (parts.length < 2) continue;
-
-    const codigo = parts[0]; // La primera columna siempre es el código
-    // La columna de precio es la última.
-    const precioStr = parts[parts.length - 1];
-
-    // --- 1. VALIDACIÓN DEL CÓDIGO ---
-    const cleanCodigo = codigo.replace(/^"|"$/g, "").trim();
-    const isCodigoPresent = cleanCodigo.length > 0;
-    if (!isCodigoPresent) continue;
-
-    // --- 2. LIMPIEZA Y VALIDACIÓN DEL PRECIO (Manejo de formatos regionales y ruido) ---
-
-    // 2.1 Limpiar el string de precio de caracteres no numéricos *excepto* puntos y comas.
-    let cleanPrecioStr = precioStr
-      // Elimina cualquier texto no numérico/no separador al final o al inicio
-      .replace(/[^\d.,]+$/g, "")
-      .replace(/^[^\d.,]+/g, "")
-      // Elimina comillas y espacios en blanco de forma agresiva
-      .replace(/^"|"$/g, "")
-      .trim();
-
-    // 2.2 Normalización de separadores:
-    if (cleanPrecioStr.includes(",")) {
-      // Si contiene coma, asumimos formato regional (ej: 1.000,50)
-      // 1. Eliminar puntos (separador de miles)
-      const tempStr = cleanPrecioStr.replace(/\./g, "");
-      // 2. Reemplazar la coma por punto (separador decimal)
-      cleanPrecioStr = tempStr.replace(/,/g, ".");
-    }
-
-    // 2.3 Conversión a número y validación.
-    const precio_nuevo_raw = parseFloat(cleanPrecioStr);
-
-    // Debe ser un número válido, no NaN y mayor que 0.
-    const isPrecioValid = !isNaN(precio_nuevo_raw) && precio_nuevo_raw > 0;
-
-    // --- 3. INSERCIÓN FINAL ---
-    if (isCodigoPresent && isPrecioValid) {
-      productsToUpdate.push({
-        codigo: cleanCodigo, // Usamos el código limpio
-        // Redondeamos a 2 decimales
-        precio_nuevo: parseFloat(precio_nuevo_raw.toFixed(2)),
-      });
-    }
-  }
-
-  return productsToUpdate;
+  campos.push(actual.trim());
+  return campos;
 }
 
-// El resto del código del handler POST y GET no necesita cambios.
+/**
+ * Google Sheets exporta con coma y Excel en español con punto y coma.
+ * Si la mayoría de las líneas tienen ";" usamos ese, si no ",".
+ */
+function detectarSeparador(lineas: string[]): string {
+  const muestra = lineas.slice(0, 20);
+  const conPuntoYComa = muestra.filter((l) => l.includes(";")).length;
+  return conPuntoYComa > muestra.length / 2 ? ";" : ",";
+}
+
+/**
+ * Convierte un precio en formato argentino o internacional a número.
+ * Ejemplos: "1.851,48" -> 1851.48 | "1851.48" -> 1851.48 | "1.851" -> 1851 | "$ 2.500" -> 2500
+ */
+function parsePrecio(valor: string): number | null {
+  let s = valor.replace(/[^\d.,-]/g, "");
+  if (!s) return null;
+
+  const ultimoPunto = s.lastIndexOf(".");
+  const ultimaComa = s.lastIndexOf(",");
+
+  if (ultimoPunto !== -1 && ultimaComa !== -1) {
+    // Tiene ambos: el que aparece último es el separador decimal
+    if (ultimaComa > ultimoPunto) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      s = s.replace(/,/g, "");
+    }
+  } else if (ultimaComa !== -1) {
+    // Solo comas: "1851,48" es decimal, "1,851" o "1,851,000" son miles
+    s = /^-?\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, "") : s.replace(",", ".");
+  } else if (ultimoPunto !== -1) {
+    // Solo puntos: "1.851" o "1.851.000" son miles, "1851.48" es decimal
+    if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+  }
+
+  const numero = Number(s);
+  if (!Number.isFinite(numero) || numero <= 0) return null;
+  return Math.round(numero * 100) / 100;
+}
+
+/**
+ * Extrae { codigo, precio_nuevo } de cada línea: el código es la primera
+ * columna y el precio la última columna con contenido. Las líneas cuyo
+ * precio no es un número (encabezados, títulos, totales) se ignoran.
+ */
+function parseCSV(csvContent: string): { filas: FilaCSV[]; lineasIgnoradas: number } {
+  const lineas = csvContent
+    .replace(/^﻿/, "") // BOM que agrega Excel
+    .split(/\r?\n|\r/)
+    .filter((l) => l.trim() !== "");
+
+  if (lineas.length === 0) return { filas: [], lineasIgnoradas: 0 };
+
+  const separador = detectarSeparador(lineas);
+  // Si un código aparece dos veces en el CSV, gana la última línea
+  const porCodigo = new Map<string, number>();
+  let lineasIgnoradas = 0;
+
+  for (const linea of lineas) {
+    const campos = splitLinea(linea, separador);
+    const noVacios = campos.filter((c) => c !== "");
+    if (noVacios.length < 2) {
+      lineasIgnoradas++;
+      continue;
+    }
+
+    const codigo = campos[0].trim();
+    const precio = parsePrecio(noVacios[noVacios.length - 1]);
+    if (!codigo || precio === null) {
+      lineasIgnoradas++;
+      continue;
+    }
+    porCodigo.set(codigo, precio);
+  }
+
+  const filas = Array.from(porCodigo, ([codigo, precio_nuevo]) => ({ codigo, precio_nuevo }));
+  return { filas, lineasIgnoradas };
+}
+
+async function traerProductos(): Promise<ProductoDB[]> {
+  const productos: ProductoDB[] = [];
+  for (let desde = 0; ; desde += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("productos")
+      .select("id, codigo, nombre, precio")
+      .order("id")
+      .range(desde, desde + PAGE_SIZE - 1);
+    if (error) throw new Error(`No se pudieron leer los productos: ${error.message}`);
+    productos.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) break;
+  }
+  return productos;
+}
+
+const normalizarNombre = (n: string | null) => (n ?? "").trim().toLowerCase();
+
 export async function POST(req: Request) {
-  // ... (código del handler POST)
   try {
     const csvContent = await req.text();
 
@@ -117,57 +149,100 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Limpiar y parsear el CSV para obtener solo los productos válidos
-    const productsToUpdate = parseAndFilterCSV(csvContent);
+    const { filas, lineasIgnoradas } = parseCSV(csvContent);
 
-    if (productsToUpdate.length === 0) {
+    if (filas.length === 0) {
       return NextResponse.json(
         {
           message:
-            "No se encontraron productos válidos para actualizar en el CSV. Asegúrate de que los códigos de producto y los precios sean válidos, y de que haya al menos dos columnas por línea de datos.",
+            "No se encontraron productos válidos en el CSV. Revisá que la primera columna sea el código y la última el precio.",
         },
         { status: 200 }
       );
     }
 
-    let updatedCount = 0;
-    let errorCount = 0;
+    // Traemos todos los productos una sola vez para saber qué códigos existen
+    const productos = await traerProductos();
+    const productosPorCodigo = new Map<string, ProductoDB[]>();
+    for (const p of productos) {
+      const codigo = (p.codigo ?? "").trim();
+      if (!codigo) continue;
+      const lista = productosPorCodigo.get(codigo) ?? [];
+      lista.push(p);
+      productosPorCodigo.set(codigo, lista);
+    }
+
+    const noEncontrados: string[] = [];
+    const codigosConflictivos: string[] = [];
+    let sinCambios = 0;
+    const actualizaciones: { codigo: string; ids: number[]; precio: number }[] = [];
+
+    for (const { codigo, precio_nuevo } of filas) {
+      const coincidencias = productosPorCodigo.get(codigo);
+      if (!coincidencias) {
+        noEncontrados.push(codigo);
+        continue;
+      }
+
+      // Varios productos con el mismo código: si son el mismo producto duplicado
+      // se actualizan todos; si son productos distintos no se toca ninguno,
+      // para no ponerle a uno el precio del otro.
+      const nombres = new Set(coincidencias.map((p) => normalizarNombre(p.nombre)));
+      if (nombres.size > 1) {
+        codigosConflictivos.push(codigo);
+        continue;
+      }
+
+      const aActualizar = coincidencias.filter((p) => Number(p.precio) !== precio_nuevo);
+      if (aActualizar.length === 0) {
+        sinCambios++;
+        continue;
+      }
+      actualizaciones.push({ codigo, ids: aActualizar.map((p) => p.id), precio: precio_nuevo });
+    }
+
+    let actualizados = 0;
     const errors: string[] = [];
 
-    // 2. Recorrer los productos limpios y realizar las actualizaciones
-    for (const product of productsToUpdate) {
-      const { codigo, precio_nuevo } = product;
-
-      // La columna en la base de datos para la coincidencia es 'codigo'.
-      // La columna a actualizar es 'precio'.
-      const { error } = await supabase
-        .from("productos")
-        .update({ precio: precio_nuevo })
-        .eq("codigo", codigo);
-
-      if (error) {
-        errors.push(`Error al actualizar código '${codigo}': ${error.message}`);
-        errorCount++;
-      } else {
-        updatedCount++;
-      }
+    for (let i = 0; i < actualizaciones.length; i += CONCURRENCIA) {
+      const tanda = actualizaciones.slice(i, i + CONCURRENCIA);
+      const resultados = await Promise.all(
+        tanda.map(({ ids, precio }) =>
+          supabase.from("productos").update({ precio }).in("id", ids).select("id")
+        )
+      );
+      resultados.forEach(({ data, error }, j) => {
+        if (error) {
+          errors.push(`Error al actualizar código '${tanda[j].codigo}': ${error.message}`);
+        } else if (!data || data.length === 0) {
+          errors.push(`El código '${tanda[j].codigo}' no se actualizó (sin permisos o borrado).`);
+        } else {
+          actualizados++;
+        }
+      });
     }
 
-    // 3. Manejar la respuesta
-    if (errors.length > 0) {
-      return NextResponse.json(
-        {
-          message: `Actualización completada con errores. Se actualizaron ${updatedCount} productos. ${errorCount} errores.`,
-          errors: errors,
-        },
-        { status: 200 }
+    const partes = [`Se actualizaron ${actualizados} productos.`];
+    if (sinCambios > 0) partes.push(`${sinCambios} ya tenían el mismo precio.`);
+    if (noEncontrados.length > 0) partes.push(`${noEncontrados.length} códigos no existen en la página.`);
+    if (codigosConflictivos.length > 0)
+      partes.push(
+        `${codigosConflictivos.length} códigos no se actualizaron porque los usan productos distintos.`
       );
-    } else {
-      return NextResponse.json(
-        { message: `Se actualizaron ${updatedCount} productos exitosamente.` },
-        { status: 200 }
-      );
-    }
+    if (errors.length > 0) partes.push(`${errors.length} errores.`);
+
+    return NextResponse.json(
+      {
+        message: partes.join(" "),
+        actualizados,
+        sinCambios,
+        noEncontrados,
+        codigosConflictivos,
+        lineasIgnoradas,
+        errors,
+      },
+      { status: 200 }
+    );
   } catch (error: unknown) {
     console.error("Error en el Route Handler:", error);
 
