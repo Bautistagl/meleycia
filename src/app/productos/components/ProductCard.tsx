@@ -7,6 +7,7 @@ import { agregarProductoAlCarrito, agregarComboAlCarrito } from "@/services/cart
 import Swal from "sweetalert2";
 import { useState, useCallback } from "react"; // Añadido useCallback
 import Link from "next/link";
+import { cdnImage } from "@/lib/imageUrl";
 import { updateProductStock, updateComboStock } from "@/app/services/product";
 
 interface ProductoCardProps {
@@ -223,7 +224,7 @@ export function ProductCard({
           <div className={styles.imageContainer}>
             {producto.imageUrl ? (
               <img
-                src={producto.imageUrl || "/placeholder.svg"}
+                src={cdnImage(producto.imageUrl) || "/placeholder.svg"}
                 alt={producto.nombre}
                 className={styles.image}
                 loading="lazy"
@@ -342,7 +343,7 @@ export function ProductCard({
           <div className={styles.imageContainer}>
             {producto.imageUrl ? (
               <img
-                src={producto.imageUrl || "/placeholder.svg"}
+                src={cdnImage(producto.imageUrl) || "/placeholder.svg"}
                 alt={producto.nombre}
                 className={styles.image}
                 loading="lazy"

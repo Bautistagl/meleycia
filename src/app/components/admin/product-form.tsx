@@ -5,6 +5,7 @@ import styles from "./product-form.module.css";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/compressImage";
+import { cdnImage } from "@/lib/imageUrl";
 import Swal from "sweetalert2";
 
 interface ProductFormProps {
@@ -460,7 +461,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
             {imageUrl && (
               <div className={styles.imagePreviewContainer}>
                 <img
-                  src={imageUrl}
+                  src={cdnImage(imageUrl)}
                   alt="Vista previa"
                   className={styles.imagePreview}
                 />

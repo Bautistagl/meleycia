@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Trash2 } from "lucide-react"
 import type { CarritoItem } from "@/types"
 import styles from "./cart-item.module.css"
+import { cdnImage } from "@/lib/imageUrl"
 
 interface CartItemProps {
   item: CarritoItem
@@ -54,7 +55,7 @@ export default function CartItem({ item, updateQuantity, removeItem }: CartItemP
       <div className={styles.product}>
         <div className={styles.productImage}>
           <Image
-            src={item.foto || "/placeholder.svg?height=80&width=80"}
+            src={cdnImage(item.foto) || "/placeholder.svg?height=80&width=80"}
             alt={item.producto?.nombre || "Producto"}
             width={80}
             height={80}
